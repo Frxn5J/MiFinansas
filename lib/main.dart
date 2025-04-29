@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/history_screen.dart';
+import 'screens/goals_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -11,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: 'TiltNeon', // <- Aquí se aplica la fuente global
       ),
-      home: HistoryScreen(),
+      home: ProfileScreen(),
     );
   }
 }
