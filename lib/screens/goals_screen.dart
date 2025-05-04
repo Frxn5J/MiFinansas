@@ -35,24 +35,12 @@ class GoalsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-        title: Text("Metas de ahorro", style: TextStyle(fontFamily: 'TiltNeon', fontSize: 28)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              backgroundColor: Colors.grey[200],
-              child: Icon(Icons.person, color: Colors.black),
-            ),
-          )
-        ],
-      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
         children: [
+          Container(
+            height: 1,
+            color: Colors.grey.shade300,
+          ),
           // Formulario Agregar Meta
           Card(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -195,12 +183,6 @@ class GoalsScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 3, // Suponiendo que es el ícono de dólar
-        onTap: (index) {
-          // lógica de navegación
-        },
       ),
     );
   }

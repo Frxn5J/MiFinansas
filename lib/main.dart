@@ -5,6 +5,7 @@ import 'package:mifinanzas/screens/transactions_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/profile_screen.dart';
+import 'widgets/main_navigator.dart';
 
 void main() => runApp(MyApp());
 
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: 'TiltNeon', // <- Aquí se aplica la fuente global
       ),
-      home: budget(),
+      home: MainNavigation(),
     );
   }
 }
