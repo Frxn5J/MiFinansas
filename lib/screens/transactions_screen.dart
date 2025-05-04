@@ -17,34 +17,10 @@ class _transactionsState extends State<transactions> {
         child: Column(
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Transacciones',
-                    style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(8.0),
-                    child: const Icon(
-                      Icons.person_outline,
-                      size: 30,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
+            Container(
+              height: 1,
+              color: Colors.grey.shade300,
             ),
-
             // Main content
             Expanded(
               child: ListView(
@@ -63,10 +39,12 @@ class _transactionsState extends State<transactions> {
                         children: [
                           // Semi-circular chart
                           SizedBox(
-                            height: 180,
-                            child: PieChartWidget(),
+                            height: 240,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 20), // separa del texto
+                              child: PieChartWidget(),
+                            ),
                           ),
-
                           // Legend
                           const SizedBox(height: 16),
                           Wrap(
@@ -311,13 +289,6 @@ class _transactionsState extends State<transactions> {
           ],
         ),
       ),
-      // Using the custom bottom navigation bar as provided
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1, // As specified in your code
-        onTap: (index) {
-          // Navigation logic would go here
-        },
-      ),
     );
   }
 
@@ -349,47 +320,16 @@ class PieChartWidget extends StatelessWidget {
     return PieChart(
       PieChartData(
         sectionsSpace: 2,
-        centerSpaceRadius: 60,
-        startDegreeOffset: 180,
+        centerSpaceRadius: 70, // espacio más amplio en el centro
+        startDegreeOffset: 180, // comienza desde la mitad
         sections: [
-          PieChartSectionData(
-            value: 60,
-            color: const Color(0xFFFFA07A),
-            showTitle: false,
-            radius: 60,
-          ),
-          PieChartSectionData(
-            value: 15,
-            color: const Color(0xFFFFD700),
-            showTitle: false,
-            radius: 60,
-          ),
-          PieChartSectionData(
-            value: 10,
-            color: const Color(0xFFFFB347),
-            showTitle: false,
-            radius: 60,
-          ),
-          PieChartSectionData(
-            value: 8,
-            color: const Color(0xFFF0E68C),
-            showTitle: false,
-            radius: 60,
-          ),
-          PieChartSectionData(
-            value: 5,
-            color: const Color(0xFFFF7F50),
-            showTitle: false,
-            radius: 60,
-          ),
-          PieChartSectionData(
-            value: 2,
-            color: const Color(0xFFFF6347),
-            showTitle: false,
-            radius: 60,
-          ),
+          PieChartSectionData(value: 60, color: Color(0xFFFFA07A), showTitle: false, radius: 50),
+          PieChartSectionData(value: 15, color: Color(0xFFFFD700), showTitle: false, radius: 50),
+          PieChartSectionData(value: 10, color: Color(0xFFFFB347), showTitle: false, radius: 50),
+          PieChartSectionData(value: 8,  color: Color(0xFFF0E68C), showTitle: false, radius: 50),
+          PieChartSectionData(value: 5,  color: Color(0xFFFF7F50), showTitle: false, radius: 50),
+          PieChartSectionData(value: 2,  color: Color(0xFFFF6347), showTitle: false, radius: 50),
         ],
-        //sectionsData: [],
       ),
     );
   }

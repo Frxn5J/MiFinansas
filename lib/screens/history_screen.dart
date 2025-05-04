@@ -16,30 +16,12 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text(
-          "Historial",
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        elevation: 1,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              backgroundColor: Colors.grey[200],
-              child: Icon(Icons.person, color: Colors.black),
-            ),
-          )
-        ],
-      ),
       body: Column(
         children: [
+          Container(
+            height: 1,
+            color: Colors.grey.shade300,
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -96,13 +78,6 @@ class HistoryScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 2,
-        onTap: (index) {
-          // Aquí podrías navegar a otras pantallas según el índice
-          print("Seleccionaste el ícono $index");
-        },
       ),
     );
   }

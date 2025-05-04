@@ -12,27 +12,6 @@ class _budgetState extends State<budget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Presupuestos',
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            child: const CircleAvatar(
-              backgroundColor: Color(0xFFE0E0E0),
-              child: Icon(Icons.person, color: Colors.black54),
-            ),
-          ),
-        ],
-      ),
       body: Column(
         children: [
           Container(
@@ -119,12 +98,6 @@ class _budgetState extends State<budget> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 4, // As specified in your code
-        onTap: (index) {
-          // Navigation logic would go here
-        },
       ),
     );
   }
