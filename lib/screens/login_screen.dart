@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/main_navigator.dart';
+import 'package:flutter/gestures.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -22,14 +24,43 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(builder: (_) => MainNavigation()),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text('Error al iniciar sesión: ${e.toString()}'),
-        ),
-      );
+    } on FirebaseAuthException catch (e) {
+      String mensaje;
+      switch (e.code) {
+        case 'invalid-email':
+          mensaje = 'El correo ingresado no es válido.';
+          break;
+        case 'user-not-found':
+          mensaje = 'No existe una cuenta con ese correo.';
+          break;
+        case 'wrong-password':
+          mensaje = 'La contraseña es incorrecta.';
+          break;
+        default:
+          mensaje = 'Ocurrió un error. Intenta nuevamente.';
+      }
+      _mostrarErrorBonito(mensaje);
     }
+  }
+
+  void _mostrarErrorBonito(String mensaje) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.black,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        content: Text(
+          mensaje,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
+          )
+        ],
+      ),
+    );
   }
 
   @override
@@ -62,7 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Usuario
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Usuario', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -93,7 +123,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 20),
 
-              // Contraseña
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Contraseña', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -128,25 +157,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: RichText(
                   text: TextSpan(
-                    text: '¿Olvidaste tu ',
+                    text: '¿No tienes usuario? ',
                     style: const TextStyle(color: Colors.black),
                     children: [
                       TextSpan(
-                        text: 'contraseña',
+                        text: 'Regístrate',
                         style: TextStyle(
                           color: orangeColor,
                           decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
                         ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => RegisterScreen()),
+                            );
+                          },
                       ),
-                      const TextSpan(text: ' o '),
-                      TextSpan(
-                        text: 'usuario',
-                        style: TextStyle(
-                          color: orangeColor,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                      const TextSpan(text: '?'),
                     ],
                   ),
                 ),
