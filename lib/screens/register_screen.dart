@@ -1,7 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
+  @override
+  _RegisterScreenState createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
   final Color orangeColor = const Color(0xFFFFA46E);
+
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  void _register() async {
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (password != confirmPassword) {
+      _showError('Las contraseñas no coinciden');
+      return;
+    }
+
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      await _firestore.collection('usuarios').doc(userCredential.user!.uid).set({
+        'usuario': username,
+        'email': email,
+        'uid': userCredential.user!.uid,
+        'fechaRegistro': FieldValue.serverTimestamp(),
+      });
+
+      Navigator.pop(context);
+    } catch (e) {
+      _showError('Error al registrar: $e');
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,85 +65,36 @@ class RegisterScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-
-              // Título
-              const Text(
-                'Registro',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
+              const Text('Registro', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
               const SizedBox(height: 40),
 
-              // USUARIO
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Usuario',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _inputField(icon: Icons.person, hint: 'Usuario', color: orangeColor),
-
+              _buildLabel('Usuario'),
+              _inputField(controller: _usernameController, icon: Icons.person, hint: 'Usuario'),
               const SizedBox(height: 20),
 
-              // CORREO
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Correo',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _inputField(icon: Icons.email, hint: 'Correo', color: orangeColor),
-
+              _buildLabel('Correo'),
+              _inputField(controller: _emailController, icon: Icons.email, hint: 'Correo'),
               const SizedBox(height: 20),
 
-              // CONTRASEÑA
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Contraseña',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _inputField(icon: Icons.lock, hint: '*************', color: orangeColor, obscure: true),
-
+              _buildLabel('Contraseña'),
+              _inputField(controller: _passwordController, icon: Icons.lock, hint: '*************', obscure: true),
               const SizedBox(height: 20),
 
-              // REPITE CONTRASEÑA
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Repite Contraseña',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _inputField(icon: Icons.lock_outline, hint: '*************', color: orangeColor, obscure: true),
-
+              _buildLabel('Repite Contraseña'),
+              _inputField(controller: _confirmPasswordController, icon: Icons.lock_outline, hint: '*************', obscure: true),
               const SizedBox(height: 40),
 
-              // BOTÓN REGISTRAR
               SizedBox(
                 width: 150,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     elevation: 6,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text(
-                    'Registrar',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
+                  child: const Text('Registrar', style: TextStyle(color: Colors.white, fontSize: 18)),
                 ),
               ),
 
@@ -104,24 +106,28 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildLabel(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
+    );
+  }
+
   Widget _inputField({
+    required TextEditingController controller,
     required IconData icon,
     required String hint,
-    required Color color,
     bool obscure = false,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: color,
+        color: orangeColor,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 4,
-            offset: const Offset(2, 2),
-          ),
+          BoxShadow(color: Colors.black26, blurRadius: 4, offset: const Offset(2, 2)),
         ],
       ),
       child: TextField(
+        controller: controller,
         obscureText: obscure,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: Colors.white),

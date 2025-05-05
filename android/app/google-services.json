@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1073126235685",
+    "project_id": "mi-finanzas-6f133",
+    "storage_bucket": "mi-finanzas-6f133.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1073126235685:android:e99a4085f6605b202ae9cc",
+        "android_client_info": {
+          "package_name": "com.alfadevlabs.mifinanzas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2vesUqwROjFAo5wms8OOzhy0afcjw6rY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
