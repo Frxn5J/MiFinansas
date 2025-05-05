@@ -6,6 +6,8 @@ import 'screens/history_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/profile_screen.dart';
 import 'widgets/main_navigator.dart';
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -15,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: 'TiltNeon', // <- Aquí se aplica la fuente global
+        fontFamily: 'TiltNeon',
       ),
       home: MainNavigation(),
     );
