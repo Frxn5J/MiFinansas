@@ -1,7 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/main_navigator.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final Color orangeColor = const Color(0xFFFFA46E);
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  void _login() async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => MainNavigation()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text('Error al iniciar sesión: ${e.toString()}'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +43,6 @@ class LoginScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-
-              // Icono circular
               CircleAvatar(
                 radius: 70,
                 backgroundColor: Colors.grey.shade300,
@@ -25,10 +52,7 @@ class LoginScreen extends StatelessWidget {
                   child: const Icon(Icons.person, size: 60, color: Colors.white),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Título
               Text(
                 'Iniciar Sesión',
                 style: TextStyle(
@@ -36,20 +60,14 @@ class LoginScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 40),
 
-              // Etiqueta Usuario
+              // Usuario
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Usuario',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                child: Text('Usuario', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 8),
-
-              // Campo Usuario
               Container(
                 decoration: BoxDecoration(
                   color: orangeColor,
@@ -62,6 +80,7 @@ class LoginScreen extends StatelessWidget {
                   ],
                 ),
                 child: TextField(
+                  controller: emailController,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.person, color: Colors.white),
                     hintText: 'Usuario',
@@ -74,17 +93,12 @@ class LoginScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // Etiqueta Contraseña
+              // Contraseña
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Contraseña',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                child: Text('Contraseña', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 8),
-
-              // Campo Contraseña
               Container(
                 decoration: BoxDecoration(
                   color: orangeColor,
@@ -97,6 +111,7 @@ class LoginScreen extends StatelessWidget {
                   ],
                 ),
                 child: TextField(
+                  controller: passwordController,
                   obscureText: true,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.lock, color: Colors.white),
@@ -109,8 +124,6 @@ class LoginScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 12),
-
-              // Olvidaste...
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: RichText(
@@ -140,12 +153,10 @@ class LoginScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 30),
-
-              // Botón Entrar
               SizedBox(
                 width: 150,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     elevation: 6,
@@ -165,21 +176,12 @@ class LoginScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
-
-              // Línea Google
               const Text('O inicia sesión con:'),
-
               const SizedBox(height: 16),
-
-              // Botón Google
               CircleAvatar(
                 backgroundColor: Colors.grey.shade100,
                 radius: 28,
-                child: Image.asset(
-                  'assets/google_logo.png',
-                  width: 32,
-                  height: 32,
-                ),
+                child: Image.asset('assets/google_logo.png', width: 32, height: 32),
               ),
               const SizedBox(height: 40),
             ],

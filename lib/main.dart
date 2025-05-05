@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:mifinanzas/screens/budget_screen.dart';
 import 'package:mifinanzas/screens/dashboard_screen.dart';
 import 'package:mifinanzas/screens/transactions_screen.dart';
@@ -9,7 +11,13 @@ import 'widgets/main_navigator.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -19,7 +27,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: 'TiltNeon',
       ),
-      home: MainNavigation(),
+      home: LoginScreen(),
     );
   }
 }
