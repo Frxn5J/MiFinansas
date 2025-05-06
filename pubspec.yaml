@@ -38,6 +38,7 @@ dependencies:
   firebase_core: ^3.13.0
   firebase_auth:
   cloud_firestore:
+  another_flutter_splash_screen: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +66,7 @@ flutter:
   assets:
     - assets/flags/
     - assets/google_logo.png
+    - assets/logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
