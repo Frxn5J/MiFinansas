@@ -15,6 +15,9 @@ class transactions extends StatefulWidget {
 class _transactionsState extends State<transactions> {
   List<Map<String, dynamic>> _transacciones = [];
   String _graficoActual = 'Ambos';
+  Map<String, Color> _categoriasGraficadas = {};
+  DateTime? _fechaInicio;
+  DateTime? _fechaFin;
 
   @override
   void initState() {
@@ -29,8 +32,29 @@ class _transactionsState extends State<transactions> {
     });
   }
 
+  bool _esMismaFecha(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<Map<String, dynamic>> transaccionesFiltradas = _transacciones.where((trans) {
+      final fecha = (trans['fecha'] as Timestamp).toDate();
+
+      if (_fechaInicio == null) return true;
+
+      if (_fechaInicio != null && _fechaFin == null) {
+        return _esMismaFecha(fecha, _fechaInicio!);
+      }
+
+      if (_fechaInicio != null && _fechaFin != null) {
+        return fecha.isAfter(_fechaInicio!.subtract(const Duration(days: 1))) &&
+            fecha.isBefore(_fechaFin!.add(const Duration(days: 1)));
+      }
+
+      return true;
+    }).toList();
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -78,14 +102,9 @@ class _transactionsState extends State<transactions> {
                           Wrap(
                             spacing: 16,
                             runSpacing: 8,
-                            children: [
-                              _buildLegendItem('VIVIENDA', const Color(0xFFFFA07A)),
-                              _buildLegendItem('SALIDAS', const Color(0xFFFFD700)),
-                              _buildLegendItem('ENTRETENIMIENTO', const Color(0xFFFFB347)),
-                              _buildLegendItem('TRANSPORTE', const Color(0xFFF0E68C)),
-                              _buildLegendItem('COMIDA', const Color(0xFFFF7F50)),
-                              _buildLegendItem('SUSCRIPCIONES', const Color(0xFFFF6347)),
-                            ],
+                            children: _categoriasGraficadas.entries.map((e) {
+                              return _buildLegendItem(e.key, e.value);
+                            }).toList(),
                           ),
                           const SizedBox(height: 20),
                           Row(
@@ -144,15 +163,23 @@ class _transactionsState extends State<transactions> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Icon(
-                                Icons.calendar_month,
-                                size: 28,
-                                color: Colors.black.withOpacity(0.8),
+                              IconButton(
+                                icon: const Icon(Icons.calendar_month, size: 28),
+                                onPressed: () => _seleccionarRangoFecha(context),
                               ),
                             ],
                           ),
+                          if (_fechaInicio != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              _fechaFin == null
+                                  ? 'Fecha: ${_formatearFecha(_fechaInicio!)}'
+                                  : 'De ${_formatearFecha(_fechaInicio!)} a ${_formatearFecha(_fechaFin!)}',
+                              style: const TextStyle(fontSize: 16, color: Colors.black54),
+                            ),
+                          ],
                           const SizedBox(height: 16),
-                          ..._transacciones.map((trans) => _buildItem(trans)).toList(),
+                          ...transaccionesFiltradas.map((trans) => _buildItem(trans)).toList(),
                         ],
                       ),
                     ),
@@ -288,6 +315,7 @@ class _transactionsState extends State<transactions> {
     ];
 
     int index = 0;
+    _categoriasGraficadas.clear();
 
     return PieChart(
       PieChartData(
@@ -296,6 +324,7 @@ class _transactionsState extends State<transactions> {
         startDegreeOffset: 180,
         sections: categorias.entries.map((e) {
           final color = colores[index % colores.length];
+          _categoriasGraficadas[e.key] = color;
           index++;
           return PieChartSectionData(
             value: e.value,
@@ -308,4 +337,21 @@ class _transactionsState extends State<transactions> {
     );
   }
 
+  Future<void> _seleccionarRangoFecha(BuildContext context) async {
+    final rango = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: _fechaInicio != null && _fechaFin != null
+          ? DateTimeRange(start: _fechaInicio!, end: _fechaFin!)
+          : null,
+    );
+
+    if (rango != null) {
+      setState(() {
+        _fechaInicio = rango.start;
+        _fechaFin = rango.end;
+      });
+    }
+  }
 }
