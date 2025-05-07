@@ -1,6 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../widgets/bottom_navbar.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/pie_chart_widget.dart';
+import '../services/firestore_service.dart';
 
 class transactions extends StatefulWidget {
   const transactions({super.key});
@@ -10,23 +13,36 @@ class transactions extends StatefulWidget {
 }
 
 class _transactionsState extends State<transactions> {
+  List<Map<String, dynamic>> _transacciones = [];
+  String _graficoActual = 'Ambos';
+
+  @override
+  void initState() {
+    super.initState();
+    cargarDatos();
+  }
+
+  Future<void> cargarDatos() async {
+    final data = await FirestoreService().getTransacciones();
+    setState(() {
+      _transacciones = data;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               height: 1,
               color: Colors.grey.shade300,
             ),
-            // Main content
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  // Expense Chart Card
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
@@ -37,15 +53,27 @@ class _transactionsState extends State<transactions> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Semi-circular chart
-                          SizedBox(
-                            height: 240,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 20), // separa del texto
-                              child: PieChartWidget(),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            child: DropdownButton<String>(
+                              value: _graficoActual,
+                              items: ['Gastos', 'Entradas', 'Ambos']
+                                  .map((opcion) => DropdownMenuItem(
+                                value: opcion,
+                                child: Text(opcion),
+                              ))
+                                  .toList(),
+                              onChanged: (valor) {
+                                if (valor != null) {
+                                  setState(() => _graficoActual = valor);
+                                }
+                              },
                             ),
                           ),
-                          // Legend
+                          SizedBox(
+                            height: 240,
+                            child: _buildGraficoPie(),
+                          ),
                           const SizedBox(height: 16),
                           Wrap(
                             spacing: 16,
@@ -59,8 +87,6 @@ class _transactionsState extends State<transactions> {
                               _buildLegendItem('SUSCRIPCIONES', const Color(0xFFFF6347)),
                             ],
                           ),
-
-                          // Monthly expense
                           const SizedBox(height: 20),
                           Row(
                             children: [
@@ -97,10 +123,7 @@ class _transactionsState extends State<transactions> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Movements Card
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
@@ -111,7 +134,6 @@ class _transactionsState extends State<transactions> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Movements header
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -129,156 +151,8 @@ class _transactionsState extends State<transactions> {
                               ),
                             ],
                           ),
-
-                          // Date header
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Miércoles 12 de febrero 2025',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black54,
-                            ),
-                          ),
-
-                          // Transaction item
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'REEMBOLSO',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    const Text(
-                                      '+\$240.00',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Icon(
-                                      Icons.arrow_upward,
-                                      color: Colors.green.shade400,
-                                      size: 24,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Second date header
                           const SizedBox(height: 16),
-                          const Text(
-                            'Lunes 10 de febrero 2025',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black54,
-                            ),
-                          ),
-
-                          // Spotify transaction
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'SPOTIFY',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    const Text(
-                                      '-\$69.00',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Icon(
-                                      Icons.arrow_downward,
-                                      color: Colors.red.shade400,
-                                      size: 24,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // H-E-B transaction
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'H-E-B AutoCobro',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    const Text(
-                                      '-\$350.00',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Icon(
-                                      Icons.arrow_downward,
-                                      color: Colors.red.shade400,
-                                      size: 24,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Empty transaction slot
-                          const SizedBox(height: 8),
-                          Container(
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                          ..._transacciones.map((trans) => _buildItem(trans)).toList(),
                         ],
                       ),
                     ),
@@ -312,25 +186,126 @@ class _transactionsState extends State<transactions> {
       ],
     );
   }
-}
 
-class PieChartWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildItem(Map<String, dynamic> trans) {
+    final tipo = trans['tipo'] as bool;
+    final titulo = trans['titulo'] ?? '';
+    final monto = trans['monto'] ?? 0;
+    final fecha = (trans['fecha'] as Timestamp).toDate();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _formatearFecha(fecha),
+          style: const TextStyle(fontSize: 16, color: Colors.black54),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                titulo.toUpperCase(),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Row(
+                children: [
+                  Text(
+                    '${tipo ? '+' : '-'}\$${monto.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: tipo ? Colors.green : Colors.red,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    tipo ? Icons.arrow_upward : Icons.arrow_downward,
+                    color: tipo ? Colors.green.shade400 : Colors.red.shade400,
+                    size: 24,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatearFecha(DateTime fecha) {
+    return '${_nombreDia(fecha.weekday)} ${fecha.day} de ${_nombreMes(fecha.month)} ${fecha.year}';
+  }
+
+  String _nombreDia(int d) {
+    const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    return dias[d - 1];
+  }
+
+  String _nombreMes(int m) {
+    const meses = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    return meses[m - 1];
+  }
+
+  Widget _buildGraficoPie() {
+    List<Map<String, dynamic>> filtradas;
+
+    if (_graficoActual == 'Gastos') {
+      filtradas = _transacciones.where((t) => t['tipo'] == false).toList();
+    } else if (_graficoActual == 'Entradas') {
+      filtradas = _transacciones.where((t) => t['tipo'] == true).toList();
+    } else {
+      filtradas = _transacciones;
+    }
+
+    Map<String, double> categorias = {};
+    for (var trans in filtradas) {
+      final categoria = trans['categoria'] ?? 'Otros';
+      final monto = (trans['monto'] as num).toDouble();
+      categorias[categoria] = (categorias[categoria] ?? 0) + monto;
+    }
+
+    final colores = [
+      Color(0xFFFFA07A),
+      Color(0xFFFFD700),
+      Color(0xFFFFB347),
+      Color(0xFFF0E68C),
+      Color(0xFFFF7F50),
+      Color(0xFFFF6347),
+      Colors.teal,
+      Colors.purple,
+      Colors.blueGrey,
+    ];
+
+    int index = 0;
+
     return PieChart(
       PieChartData(
         sectionsSpace: 2,
-        centerSpaceRadius: 70, // espacio más amplio en el centro
-        startDegreeOffset: 180, // comienza desde la mitad
-        sections: [
-          PieChartSectionData(value: 60, color: Color(0xFFFFA07A), showTitle: false, radius: 50),
-          PieChartSectionData(value: 15, color: Color(0xFFFFD700), showTitle: false, radius: 50),
-          PieChartSectionData(value: 10, color: Color(0xFFFFB347), showTitle: false, radius: 50),
-          PieChartSectionData(value: 8,  color: Color(0xFFF0E68C), showTitle: false, radius: 50),
-          PieChartSectionData(value: 5,  color: Color(0xFFFF7F50), showTitle: false, radius: 50),
-          PieChartSectionData(value: 2,  color: Color(0xFFFF6347), showTitle: false, radius: 50),
-        ],
+        centerSpaceRadius: 70,
+        startDegreeOffset: 180,
+        sections: categorias.entries.map((e) {
+          final color = colores[index % colores.length];
+          index++;
+          return PieChartSectionData(
+            value: e.value,
+            color: color,
+            showTitle: false,
+            radius: 50,
+          );
+        }).toList(),
       ),
     );
   }
+
 }
