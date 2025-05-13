@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
+import '../widgets//add_button.dart';
 
 class GoalsScreen extends StatelessWidget {
   final List<Map<String, dynamic>> goals = [
@@ -35,6 +36,7 @@ class GoalsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: RegistroFAB(),
       body: ListView(
         children: [
           Container(
