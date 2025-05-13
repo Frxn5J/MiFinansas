@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../widgets//add_button.dart';
 
 class dashboard extends StatefulWidget {
   const dashboard({super.key});
@@ -13,6 +14,7 @@ class _DashboardScreenState extends State<dashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: RegistroFAB(),
       body: SafeArea(
         child: Column(
           children: [

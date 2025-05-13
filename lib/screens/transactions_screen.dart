@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/pie_chart_widget.dart';
-import '../services/firestore_service.dart';
+import '../widgets//add_button.dart';
+import '../services/firestore_service.dart'
+;
 
 class transactions extends StatefulWidget {
   const transactions({super.key});
@@ -56,6 +58,7 @@ class _transactionsState extends State<transactions> {
     }).toList();
 
     return Scaffold(
+      floatingActionButton: RegistroFAB(),
       body: SafeArea(
         child: Column(
           children: [
