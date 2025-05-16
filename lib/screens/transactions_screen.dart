@@ -9,7 +9,6 @@ import '../services/firestore_service.dart'
 
 class transactions extends StatefulWidget {
   const transactions({super.key});
-
   @override
   State<transactions> createState() => _transactionsState();
 }
