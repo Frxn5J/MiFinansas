@@ -51,7 +51,6 @@ class _transactionsState extends State<transactions> {
         }
       }
     }
-
     return entradas - salidas;
   }
 
