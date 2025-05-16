@@ -4,7 +4,7 @@
             "outputFile": "com.alfadevlabs.mifinanzas.app-mergeDebugResources-33:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\losac\\Escritorio\\proyecto\\MiFinansas\\android\\app\\src\\main\\res\\values-night\\styles.xml",
+                    "source": "C:\\Users\\losac\\Escritorio\\mi_finanzas\\MiFinansas\\android\\app\\src\\main\\res\\values-night\\styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",

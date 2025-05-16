@@ -145,7 +145,7 @@
         <entry key="flutter">
           <value>
             <list>
-              <option value="$USER_HOME$/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter/lib" />
+              <option value="$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter/lib" />
             </list>
           </value>
         </entry>
@@ -156,17 +156,24 @@
             </list>
           </value>
         </entry>
+        <entry key="flutter_localizations">
+          <value>
+            <list>
+              <option value="$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_localizations/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="flutter_test">
           <value>
             <list>
-              <option value="$USER_HOME$/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter_test/lib" />
+              <option value="$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_test/lib" />
             </list>
           </value>
         </entry>
         <entry key="flutter_web_plugins">
           <value>
             <list>
-              <option value="$USER_HOME$/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter_web_plugins/lib" />
+              <option value="$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_web_plugins/lib" />
             </list>
           </value>
         </entry>
@@ -174,6 +181,13 @@
           <value>
             <list>
               <option value="$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.1.2/lib" />
+            </list>
+          </value>
+        </entry>
+        <entry key="intl">
+          <value>
+            <list>
+              <option value="$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.19.0/lib" />
             </list>
           </value>
         </entry>
@@ -243,7 +257,7 @@
         <entry key="sky_engine">
           <value>
             <list>
-              <option value="$USER_HOME$/flutterdev/flutter_windows_3.29.2-stable/flutter/bin/cache/pkg/sky_engine/lib" />
+              <option value="$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/bin/cache/pkg/sky_engine/lib" />
             </list>
           </value>
         </entry>
@@ -342,6 +356,7 @@
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/fl_chart-0.71.0/lib" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-5.0.0/lib" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.1.2/lib" />
+      <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/intl-0.19.0/lib" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker-10.0.8/lib" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker_flutter_testing-3.0.9/lib" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker_testing-3.0.1/lib" />
@@ -361,10 +376,11 @@
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.1.4/lib" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-14.3.1/lib" />
       <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dev/web-1.1.1/lib" />
-      <root url="file://$USER_HOME$/flutterdev/flutter_windows_3.29.2-stable/flutter/bin/cache/pkg/sky_engine/lib" />
-      <root url="file://$USER_HOME$/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter/lib" />
-      <root url="file://$USER_HOME$/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter_test/lib" />
-      <root url="file://$USER_HOME$/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter_web_plugins/lib" />
+      <root url="file://$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/bin/cache/pkg/sky_engine/lib" />
+      <root url="file://$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter/lib" />
+      <root url="file://$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_localizations/lib" />
+      <root url="file://$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_test/lib" />
+      <root url="file://$PROJECT_DIR$/../../movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_web_plugins/lib" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

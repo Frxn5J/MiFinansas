@@ -20,28 +20,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _register() async {
     final username = _usernameController.text.trim();
-    final email = _emailController.text.trim();
+    final email    = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    final confirmPassword = _confirmPasswordController.text.trim();
+    final confirm  = _confirmPasswordController.text.trim();
 
-    if (password != confirmPassword) {
+    if (password != confirm) {
       _showError('Las contraseñas no coinciden');
       return;
     }
 
     try {
+      // 1️⃣ Crear usuario en Auth
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      await _firestore.collection('usuarios').doc(userCredential.user!.uid).set({
+      final uid = userCredential.user!.uid;
+
+      // 2️⃣ Crear documento en Firestore con saldoInicial = 0.0
+      await _firestore
+          .collection('usuarios')
+          .doc(uid)
+          .set({
         'usuario': username,
         'email': email,
-        'uid': userCredential.user!.uid,
+        'uid': uid,
         'fechaRegistro': FieldValue.serverTimestamp(),
+        'saldoDisponible': 0.0,         // ← Nuevo campo
       });
 
+      // 3️⃣ Volver atrás
       Navigator.pop(context);
     } catch (e) {
       _showError('Error al registrar: $e');

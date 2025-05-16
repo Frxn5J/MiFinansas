@@ -34,6 +34,27 @@ class _transactionsState extends State<transactions> {
     });
   }
 
+  double _calcularBalanceMensual() {
+    final ahora = DateTime.now();
+    double entradas = 0;
+    double salidas = 0;
+
+    for (var trans in _transacciones) {
+      final fecha = (trans['fecha'] as Timestamp).toDate();
+      if (fecha.month == ahora.month && fecha.year == ahora.year) {
+        final monto = (trans['monto'] as num).toDouble();
+        final tipo = trans['tipo'] as bool;
+        if (tipo) {
+          entradas += monto;
+        } else {
+          salidas += monto;
+        }
+      }
+    }
+
+    return entradas - salidas;
+  }
+
   bool _esMismaFecha(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
@@ -113,7 +134,7 @@ class _transactionsState extends State<transactions> {
                           Row(
                             children: [
                               const Text(
-                                'Gasto del mes:',
+                                'Balance del mes:',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -121,16 +142,18 @@ class _transactionsState extends State<transactions> {
                               ),
                               const Spacer(),
                               RichText(
-                                text: const TextSpan(
-                                  style: TextStyle(
+                                text: TextSpan(
+                                  style: const TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black,
                                   ),
                                   children: [
-                                    TextSpan(text: '\$10,354.50'),
                                     TextSpan(
-                                      text: 'MXN',
+                                      text: '\$${_calcularBalanceMensual().toStringAsFixed(2)}',
+                                    ),
+                                    const TextSpan(
+                                      text: ' MXN',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.normal,

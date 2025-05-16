@@ -1,0 +1,2 @@
+C:/Users/losac/Escritorio/mi_finanzas/MiFinansas/android/app/.cxx/Debug/6z6q81w6/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/losac/Escritorio/mi_finanzas/MiFinansas/android/app/.cxx/Debug/6z6q81w6/arm64-v8a/CMakeFiles/rebuild_cache.dir
