@@ -23,14 +23,19 @@ class _transactionsState extends State<transactions> {
   @override
   void initState() {
     super.initState();
-    cargarDatos();
-  }
-
-  Future<void> cargarDatos() async {
-    final data = await FirestoreService().getTransacciones();
-    setState(() {
-      _transacciones = data;
-    });
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      FirebaseFirestore.instance
+          .collection('transacciones')
+          .where('usuarioId', isEqualTo: user.uid)
+          .orderBy('fecha', descending: true)
+          .snapshots()
+          .listen((snapshot) {
+        setState(() {
+          _transacciones = snapshot.docs.map((doc) => doc.data()).toList();
+        });
+      });
+    }
   }
 
   double _calcularBalanceMensual() {
@@ -138,26 +143,28 @@ class _transactionsState extends State<transactions> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const Spacer(),
-                              RichText(
-                                text: TextSpan(
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: '\$${_calcularBalanceMensual().toStringAsFixed(2)}',
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: RichText(
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
                                     ),
-                                    const TextSpan(
-                                      text: ' MXN',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.normal,
+                                    children: [
+                                      TextSpan(text: '\$${_calcularBalanceMensual().toStringAsFixed(2)}'),
+                                      const TextSpan(
+                                        text: ' MXN',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.normal,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],

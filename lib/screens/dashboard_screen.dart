@@ -16,79 +16,71 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   double totalEntradas = 0;
   double totalSalidas = 0;
+  double saldoDisponible = 0;
   List<Map<String, dynamic>> movimientos = [];
 
   @override
   void initState() {
     super.initState();
-    cargarTransacciones();
-  }
-
-  Future<void> cargarTransacciones() async {
     final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Escuchar cambios en el saldo disponible
+      FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .snapshots()
+          .listen((docSnapshot) {
+        final data = docSnapshot.data();
+        if (data != null) {
+          setState(() {
+            saldoDisponible = (data['saldoDisponible'] ?? 0).toDouble();
+          });
+        }
+      });
 
-    if (user == null) {
-      print("⚠️ Usuario no autenticado");
-      return;
-    }
-
-    print("✅ Usuario autenticado: ${user.uid}");
-
-    try {
-      final snapshot = await FirebaseFirestore.instance
+      // Escuchar cambios en las transacciones
+      FirebaseFirestore.instance
           .collection('transacciones')
           .where('usuarioId', isEqualTo: user.uid)
           .orderBy('fecha', descending: true)
-          .get();
+          .snapshots()
+          .listen((snapshot) {
+        double entradas = 0;
+        double salidas = 0;
+        List<Map<String, dynamic>> tempMov = [];
 
-      print("📦 Transacciones encontradas: ${snapshot.docs.length}");
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          final monto = (data['monto'] ?? 0).toDouble();
+          final tipo = data['tipo'];
+          final titulo = data['titulo'] ?? 'Sin título';
+          final fecha = (data['fecha'] as Timestamp).toDate();
 
-      double entradas = 0;
-      double salidas = 0;
-      List<Map<String, dynamic>> tempMov = [];
+          if (tipo == true) {
+            entradas += monto;
+          } else {
+            salidas += monto;
+          }
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-
-        final monto = (data['monto'] ?? 0).toDouble();
-        final tipo = data['tipo']; // true = entrada, false = salida
-        final titulo = data['titulo'] ?? 'Sin título';
-        final fecha = (data['fecha'] as Timestamp).toDate();
-
-        print("🧾 Transacción: $titulo | Monto: $monto | Tipo: ${tipo == true ? 'Entrada' : 'Salida'}");
-
-        if (tipo == true) {
-          entradas += monto;
-        } else {
-          salidas += monto;
+          tempMov.add({
+            'titulo': titulo,
+            'monto': monto,
+            'tipo': tipo,
+            'fecha': fecha,
+          });
         }
 
-        tempMov.add({
-          'titulo': titulo,
-          'monto': monto,
-          'tipo': tipo,
-          'fecha': fecha,
+        setState(() {
+          totalEntradas = entradas;
+          totalSalidas = salidas;
+          movimientos = tempMov;
         });
-      }
-
-      setState(() {
-        totalEntradas = entradas;
-        totalSalidas = salidas;
-        movimientos = tempMov;
       });
-
-      print("✅ Entradas: $totalEntradas | Salidas: $totalSalidas");
-      print("📈 Movimientos cargados: ${movimientos.length}");
-    } catch (e) {
-      print("❌ Error al cargar transacciones: $e");
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    final saldoDisponible = totalEntradas - totalSalidas;
-
     return Scaffold(
       backgroundColor: Colors.white,
       floatingActionButton: RegistroFAB(),

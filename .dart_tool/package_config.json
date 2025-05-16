@@ -123,7 +123,7 @@
     },
     {
       "name": "flutter",
-      "rootUri": "file:///C:/Users/losac/Escritorio/movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter",
+      "rootUri": "file:///C:/Users/losac/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -135,19 +135,19 @@
     },
     {
       "name": "flutter_localizations",
-      "rootUri": "file:///C:/Users/losac/Escritorio/movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_localizations",
+      "rootUri": "file:///C:/Users/losac/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter_localizations",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
     {
       "name": "flutter_test",
-      "rootUri": "file:///C:/Users/losac/Escritorio/movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_test",
+      "rootUri": "file:///C:/Users/losac/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
     {
       "name": "flutter_web_plugins",
-      "rootUri": "file:///C:/Users/losac/Escritorio/movil/sdk/flutter_windows_3.29.3-stable/flutter/packages/flutter_web_plugins",
+      "rootUri": "file:///C:/Users/losac/flutterdev/flutter_windows_3.29.2-stable/flutter/packages/flutter_web_plugins",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -219,7 +219,7 @@
     },
     {
       "name": "sky_engine",
-      "rootUri": "file:///C:/Users/losac/Escritorio/movil/sdk/flutter_windows_3.29.3-stable/flutter/bin/cache/pkg/sky_engine",
+      "rootUri": "file:///C:/Users/losac/flutterdev/flutter_windows_3.29.2-stable/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
       "languageVersion": "3.7"
     },
@@ -290,10 +290,10 @@
       "languageVersion": "3.6"
     }
   ],
-  "generated": "2025-05-16T16:33:29.740658Z",
+  "generated": "2025-05-16T22:24:02.911497Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
-  "flutterRoot": "file:///C:/Users/losac/Escritorio/movil/sdk/flutter_windows_3.29.3-stable/flutter",
-  "flutterVersion": "3.29.3",
+  "flutterRoot": "file:///C:/Users/losac/flutterdev/flutter_windows_3.29.2-stable/flutter",
+  "flutterVersion": "3.29.2",
   "pubCache": "file:///C:/Users/losac/AppData/Local/Pub/Cache"
 }
