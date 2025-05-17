@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
 import '../widgets//add_button.dart';
+import '../widgets/fab_expandible.dart';
 
 class budget extends StatefulWidget {
   const budget({super.key});
@@ -13,7 +14,7 @@ class _budgetState extends State<budget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: RegistroFAB(),
+      floatingActionButton: FABExpandible(),
       body: Column(
         children: [
           Container(

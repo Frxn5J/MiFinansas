@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
 import '../widgets//add_button.dart';
+import '../widgets/fab_expandible.dart';
 
 class HistoryScreen extends StatelessWidget {
   final List<Map<String, dynamic>> items = [
@@ -17,7 +18,7 @@ class HistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      floatingActionButton: RegistroFAB(),
+      floatingActionButton: FABExpandible(),
       body: Column(
         children: [
           Container(

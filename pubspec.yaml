@@ -42,6 +42,7 @@ dependencies:
   cloud_firestore:
   intl:
   another_flutter_splash_screen: ^1.2.1
+  flutter_colorpicker:
 
 dev_dependencies:
   flutter_test:
