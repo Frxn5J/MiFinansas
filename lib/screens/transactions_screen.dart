@@ -19,6 +19,7 @@ class _transactionsState extends State<transactions> {
   Map<String, Color> _categoriasGraficadas = {};
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
+  int? _indiceTocado;
 
   @override
   void initState() {
@@ -345,28 +346,75 @@ class _transactionsState extends State<transactions> {
       Colors.blueGrey,
     ];
 
+    double total = categorias.values.fold(0, (a, b) => a + b);
     int index = 0;
     _categoriasGraficadas.clear();
 
-    return PieChart(
-      PieChartData(
-        sectionsSpace: 2,
-        centerSpaceRadius: 70,
-        startDegreeOffset: 180,
-        sections: categorias.entries.map((e) {
-          final color = colores[index % colores.length];
-          _categoriasGraficadas[e.key] = color;
-          index++;
-          return PieChartSectionData(
-            value: e.value,
-            color: color,
-            showTitle: false,
-            radius: 50,
-          );
-        }).toList(),
-      ),
+    final entries = categorias.entries.toList();
+
+    final sections = entries.map((e) {
+      final color = colores[index % colores.length];
+      _categoriasGraficadas[e.key] = color;
+      final touched = _indiceTocado == index;
+      final radius = touched ? 60.0 : 50.0;
+      index++;
+      return PieChartSectionData(
+        value: e.value,
+        color: color,
+        radius: radius,
+        title: '',
+      );
+    }).toList();
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        PieChart(
+          PieChartData(
+            sections: sections,
+            sectionsSpace: 2,
+            centerSpaceRadius: 70,
+            startDegreeOffset: 180,
+            pieTouchData: PieTouchData(
+              touchCallback: (event, response) {
+                if (event is FlTapUpEvent) {
+                  final index = response?.touchedSection?.touchedSectionIndex ?? -1;
+                  setState(() {
+                    if (index < 0 || index >= entries.length) {
+                      _indiceTocado = null;
+                    } else {
+                      _indiceTocado = index;
+                    }
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+        if (_indiceTocado != null && _indiceTocado! >= 0 && _indiceTocado! < entries.length)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                entries[_indiceTocado!].key,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '\$${entries[_indiceTocado!].value.toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${(entries[_indiceTocado!].value / total * 100).toStringAsFixed(1)}%',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
+          ),
+      ],
     );
   }
+
 
   Future<void> _seleccionarRangoFecha(BuildContext context) async {
     final rango = await showDateRangePicker(
