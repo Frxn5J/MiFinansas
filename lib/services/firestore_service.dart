@@ -8,7 +8,7 @@ class FirestoreService {
 
     final snapshot = await FirebaseFirestore.instance
         .collection('transacciones')
-        //.where('usuarioId', isEqualTo: user.uid)
+        .where('usuarioId', isEqualTo: user.uid)
         .orderBy('fecha', descending: true)
         .get();
 

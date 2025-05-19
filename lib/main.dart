@@ -11,12 +11,14 @@ import 'widgets/main_navigator.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'package:another_flutter_splash_screen/another_flutter_splash_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await initializeDateFormatting('es_MX', null);
   runApp(MyApp());
 }
 

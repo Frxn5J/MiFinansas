@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
-import '../widgets/add_button.dart';
+import '../widgets/fab_expandible.dart';
 
 class HistoryScreen extends StatefulWidget {
   @override
@@ -21,50 +21,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    final user = _auth.currentUser;
-    if (user != null) {
-      _uid = user.uid;
-    }
+    _uid = _auth.currentUser?.uid;
   }
 
-  /// Builds Firestore query with optional filters
-  Query _buildQuery() {
-    Query q = _firestore
-        .collection('transacciones')
-        .where('usuarioId', isEqualTo: _uid);
-
-    if (_selectedCategory != null && _selectedCategory!.isNotEmpty) {
-      q = q.where('categoria', isEqualTo: _selectedCategory);
-    }
-    if (_selectedDateRange != null) {
-      q = q
-          .where('fecha',
-              isGreaterThanOrEqualTo:
-                  Timestamp.fromDate(_selectedDateRange!.start))
-          .where('fecha',
-              isLessThanOrEqualTo:
-                  Timestamp.fromDate(_selectedDateRange!.end));
-    }
-    if (_amountRange != null) {
-      q = q
-          .where('monto', isGreaterThanOrEqualTo: _amountRange!.start)
-          .where('monto', isLessThanOrEqualTo: _amountRange!.end);
-    }
-    return q;
+  /// Resets all filters
+  void _clearFilters() {
+    setState(() {
+      _selectedCategory = null;
+      _selectedDateRange = null;
+      _amountRange = null;
+    });
   }
 
-  /// Groups a list of docs by 'categoria' and sums 'monto'
-  Map<String, double> _groupByCategory(List<QueryDocumentSnapshot> docs) {
-    final Map<String, double> data = {};
-    for (var doc in docs) {
-      final cat = doc['categoria'] as String;
-      final amt = (doc['monto'] as num).toDouble();
-      data[cat] = (data[cat] ?? 0) + amt;
-    }
-    return data;
-  }
-
-  /// UI to pick filters
   Widget _buildFilters() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -112,10 +80,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               const SizedBox(width: 6),
               Text(
                 label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.black),
               ),
             ],
           ),
@@ -129,24 +94,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final selected = await showDialog<String>(
       context: context,
       builder: (_) => SimpleDialog(
-        title: const Text(
-          'Selecciona categoría',
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text('Selecciona categoría', style: TextStyle(color: Colors.black)),
         children: categories
             .map((c) => SimpleDialogOption(
-                  child: Text(
-                    c,
-                    style: const TextStyle(color: Colors.black),
-                  ),
+                  child: Text(c, style: const TextStyle(color: Colors.black)),
                   onPressed: () => Navigator.pop(context, c),
                 ))
             .toList(),
       ),
     );
-    if (selected != null) {
-      setState(() => _selectedCategory = selected);
-    }
+    if (selected != null) setState(() => _selectedCategory = selected);
   }
 
   Future<void> _pickDateRange() async {
@@ -166,33 +123,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: child!,
       ),
     );
-    if (result != null) {
-      setState(() => _selectedDateRange = result);
-    }
+    if (result != null) setState(() => _selectedDateRange = result);
   }
 
   Future<void> _pickAmountRange() async {
-    final initial = _amountRange ?? const RangeValues(0, 10000);
+    final initial = _amountRange ?? const RangeValues(-10000, 10000);
     RangeValues tempRange = initial;
     final result = await showDialog<RangeValues>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text(
-          'Rango de monto',
-          style: TextStyle(color: Colors.black),
-        ),
+        title: const Text('Rango de monto', style: TextStyle(color: Colors.black)),
         content: StatefulBuilder(
           builder: (context, setState) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               RangeSlider(
-                min: 0,
+                min: -10000,
                 max: 10000,
                 divisions: 100,
-                labels: RangeLabels(
-                  tempRange.start.toStringAsFixed(0),
-                  tempRange.end.toStringAsFixed(0),
-                ),
+                labels: RangeLabels(tempRange.start.toStringAsFixed(0), tempRange.end.toStringAsFixed(0)),
                 values: tempRange,
                 onChanged: (r) => setState(() => tempRange = r),
               ),
@@ -200,63 +149,102 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.black)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, tempRange),
-            child: const Text('OK', style: TextStyle(color: Colors.black)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar', style: TextStyle(color: Colors.black))),
+          TextButton(onPressed: () => Navigator.pop(context, tempRange), child: const Text('OK', style: TextStyle(color: Colors.black))),
         ],
       ),
     );
     if (result != null) setState(() => _amountRange = result);
   }
 
+  /// Filters docs locally after fetching by userId
+  List<QueryDocumentSnapshot> _applyLocalFilters(List<QueryDocumentSnapshot> docs) {
+    return docs.where((doc) {
+      bool keep = true;
+      if (_selectedCategory != null) {
+        keep &= (doc['categoria'] as String) == _selectedCategory;
+      }
+      if (_selectedDateRange != null) {
+        final ts = doc['fecha'] as Timestamp;
+        final date = ts.toDate();
+        keep &= date.isAfter(_selectedDateRange!.start.subtract(const Duration(seconds: 1))) &&
+                date.isBefore(_selectedDateRange!.end.add(const Duration(seconds: 1)));
+      }
+      if (_amountRange != null) {
+        final amt = (doc['monto'] as num).toDouble();
+        keep &= amt >= _amountRange!.start && amt <= _amountRange!.end;
+      }
+      return keep;
+    }).toList();
+  }
+
+  /// Groups by 'categoria' and sums 'monto'
+  Map<String, double> _groupByCategory(List<QueryDocumentSnapshot> docs) {
+    final Map<String, double> data = {};
+    for (var doc in docs) {
+      final cat = doc['categoria'] as String;
+      final amt = (doc['monto'] as num).toDouble();
+      data[cat] = (data[cat] ?? 0) + amt;
+    }
+    return data;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_uid == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    if (_uid == null) return const Center(child: CircularProgressIndicator());
+    final filtersActive = _selectedCategory != null || _selectedDateRange != null || _amountRange != null;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      floatingActionButton: RegistroFAB(),
+      floatingActionButton: FABExpandible(),
       body: Column(
         children: [
           Divider(height: 1, color: Colors.grey.shade300),
           _buildFilters(),
+          if (filtersActive)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: _clearFilters,
+                  icon: const Icon(Icons.clear, color: Colors.black),
+                  label: const Text('Borrar filtros', style: TextStyle(color: Colors.black)),
+                ),
+              ),
+            ),
           if (_selectedDateRange != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'De ${_selectedDateRange!.start.toLocal().toShortDateString()} a ${_selectedDateRange!.end.toLocal().toShortDateString()}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
+                  'De ${_selectedDateRange!.start.toShortDateString()} a ${_selectedDateRange!.end.toShortDateString()}',
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
                 ),
               ),
             ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _buildQuery().snapshots(),
+              stream: _firestore
+                  .collection('transacciones')
+                  .where('usuarioId', isEqualTo: _uid)
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No hay transacciones',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  );
+                  return const Center(child: Text('No hay transacciones', style: TextStyle(color: Colors.black)));
                 }
-                final grouped = _groupByCategory(snapshot.data!.docs);
+                // Apply local filters
+                final rawDocs = snapshot.data!.docs;
+                final filtered = _applyLocalFilters(rawDocs);
+                if (filtered.isEmpty) {
+                  return const Center(child: Text('Sin resultados para estos filtros', style: TextStyle(color: Colors.black)));
+                }
+                // Group and display
+                final grouped = _groupByCategory(filtered);
                 return ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   children: grouped.entries.map((e) {
@@ -265,30 +253,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       margin: const EdgeInsets.symmetric(vertical: 6),
                       child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.orange.shade100,
-                          child: const Icon(Icons.category, color: Colors.orange),
-                        ),
-                        title: Text(
-                          e.key,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${e.value.toStringAsFixed(2)} registros',
-                          style: TextStyle(color: Colors.grey.shade700),
-                        ),
-                        trailing: Text(
-                          '${isIncome ? '+' : ''} \$${e.value.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isIncome
-                                ? Colors.green.shade700
-                                : Colors.red.shade800,
-                          ),
-                        ),
+                        leading: CircleAvatar(backgroundColor: Colors.orange.shade100, child: const Icon(Icons.category, color: Colors.orange)),
+                        title: Text(e.key, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                        subtitle: Text('${e.value.toStringAsFixed(2)} registros', style: TextStyle(color: Colors.grey.shade700)),
+                        trailing: Text('${isIncome ? '+' : ''} \$${e.value.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.bold, color: isIncome ? Colors.green.shade700 : Colors.red.shade800)),
                       ),
                     );
                   }).toList(),
@@ -303,7 +271,5 @@ class _HistoryScreenState extends State<HistoryScreen> {
 }
 
 extension DateHelpers on DateTime {
-  String toShortDateString() {
-    return "\${this.day}/\${this.month}/\${this.year}";
-  }
+  String toShortDateString() => '${day}/${month}/${year}';
 }

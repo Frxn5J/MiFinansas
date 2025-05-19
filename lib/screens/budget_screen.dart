@@ -105,6 +105,8 @@ class _budgetState extends State<budget> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF4CAF50),
+        foregroundColor: Colors.white,
         onPressed: () => _showBudgetDialog(),
         child: const Icon(Icons.add),
       ),

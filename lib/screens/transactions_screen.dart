@@ -2,13 +2,13 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/fab_expandible.dart';
 import '../widgets/pie_chart_widget.dart';
-import '../widgets/add_button.dart';
+import '../widgets//add_button.dart';
 import '../services/firestore_service.dart';
 
 class transactions extends StatefulWidget {
   const transactions({super.key});
-
   @override
   State<transactions> createState() => _transactionsState();
 }
@@ -19,18 +19,44 @@ class _transactionsState extends State<transactions> {
   Map<String, Color> _categoriasGraficadas = {};
   DateTime? _fechaInicio;
   DateTime? _fechaFin;
+  int? _indiceTocado;
 
   @override
   void initState() {
     super.initState();
-    cargarDatos();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      FirebaseFirestore.instance
+          .collection('transacciones')
+          .where('usuarioId', isEqualTo: user.uid)
+          .orderBy('fecha', descending: true)
+          .snapshots()
+          .listen((snapshot) {
+        setState(() {
+          _transacciones = snapshot.docs.map((doc) => doc.data()).toList();
+        });
+      });
+    }
   }
 
-  Future<void> cargarDatos() async {
-    final data = await FirestoreService().getTransacciones();
-    setState(() {
-      _transacciones = data;
-    });
+  double _calcularBalanceMensual() {
+    final ahora = DateTime.now();
+    double entradas = 0;
+    double salidas = 0;
+
+    for (var trans in _transacciones) {
+      final fecha = (trans['fecha'] as Timestamp).toDate();
+      if (fecha.month == ahora.month && fecha.year == ahora.year) {
+        final monto = (trans['monto'] as num).toDouble();
+        final tipo = trans['tipo'] as bool;
+        if (tipo) {
+          entradas += monto;
+        } else {
+          salidas += monto;
+        }
+      }
+    }
+    return entradas - salidas;
   }
 
   bool _esMismaFecha(DateTime a, DateTime b) {
@@ -39,95 +65,105 @@ class _transactionsState extends State<transactions> {
 
   @override
   Widget build(BuildContext context) {
-    final transaccionesFiltradas = _transacciones.where((trans) {
+    List<Map<String, dynamic>> transaccionesFiltradas = _transacciones.where((trans) {
       final fecha = (trans['fecha'] as Timestamp).toDate();
+
       if (_fechaInicio == null) return true;
-      if (_fechaFin == null) {
+
+      if (_fechaInicio != null && _fechaFin == null) {
         return _esMismaFecha(fecha, _fechaInicio!);
       }
-      return fecha.isAfter(_fechaInicio!.subtract(const Duration(days: 1))) &&
-          fecha.isBefore(_fechaFin!.add(const Duration(days: 1)));
+
+      if (_fechaInicio != null && _fechaFin != null) {
+        return fecha.isAfter(_fechaInicio!.subtract(const Duration(days: 1))) &&
+            fecha.isBefore(_fechaFin!.add(const Duration(days: 1)));
+      }
+
+      return true;
     }).toList();
 
     return Scaffold(
-      floatingActionButton: RegistroFAB(),
+      floatingActionButton: FABExpandible(),
       body: SafeArea(
         child: Column(
           children: [
-            Container(height: 1, color: Colors.grey.shade300),
+            Container(
+              height: 1,
+              color: Colors.grey.shade300,
+            ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  // Gráfico Pie
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          DropdownButton<String>(
-                            isExpanded: true,
-                            value: _graficoActual,
-                            items: ['Gastos', 'Entradas', 'Ambos']
-                                .map((opcion) => DropdownMenuItem(
-                                      value: opcion,
-                                      child: Text(
-                                        opcion,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ))
-                                .toList(),
-                            onChanged: (valor) {
-                              if (valor != null) setState(() => _graficoActual = valor);
-                            },
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            child: DropdownButton<String>(
+                              value: _graficoActual,
+                              items: ['Gastos', 'Entradas', 'Ambos']
+                                  .map((opcion) => DropdownMenuItem(
+                                value: opcion,
+                                child: Text(opcion),
+                              ))
+                                  .toList(),
+                              onChanged: (valor) {
+                                if (valor != null) {
+                                  setState(() => _graficoActual = valor);
+                                }
+                              },
+                            ),
                           ),
-                          const SizedBox(height: 12),
-                          AspectRatio(
-                            aspectRatio: 1.2,
+                          SizedBox(
+                            height: 240,
                             child: _buildGraficoPie(),
                           ),
                           const SizedBox(height: 16),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Wrap(
-                              spacing: 16,
-                              runSpacing: 8,
-                              children: _categoriasGraficadas.entries
-                                  .map((e) => _buildLegendItem(e.key, e.value))
-                                  .toList(),
-                            ),
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 8,
+                            children: _categoriasGraficadas.entries.map((e) {
+                              return _buildLegendItem(e.key, e.value);
+                            }).toList(),
                           ),
                           const SizedBox(height: 20),
                           Row(
                             children: [
-                              Flexible(
-                                child: const Text(
-                                  'Gasto del mes:',
-                                  style: TextStyle(
-                                      fontSize: 20, fontWeight: FontWeight.bold),
-                                  overflow: TextOverflow.ellipsis,
+                              const Text(
+                                'Balance del mes:',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const Spacer(),
-                              Flexible(
+                              const SizedBox(width: 8),
+                              Expanded(
                                 child: RichText(
                                   overflow: TextOverflow.ellipsis,
-                                  text: const TextSpan(
-                                    style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black),
+                                  maxLines: 1,
+                                  text: TextSpan(
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
                                     children: [
-                                      TextSpan(text: '\$10,354.50'),
-                                      TextSpan(
-                                          text: ' MXN',
-                                          style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.normal)),
+                                      TextSpan(text: '\$${_calcularBalanceMensual().toStringAsFixed(2)}'),
+                                      const TextSpan(
+                                        text: ' MXN',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -139,28 +175,24 @@ class _transactionsState extends State<transactions> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Lista Movimientos
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: const Text(
-                                    'MOVIMIENTOS POR MES',
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold),
-                                  ),
+                              const Text(
+                                'MOVIMIENTOS POR MES',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                               IconButton(
@@ -175,13 +207,11 @@ class _transactionsState extends State<transactions> {
                               _fechaFin == null
                                   ? 'Fecha: ${_formatearFecha(_fechaInicio!)}'
                                   : 'De ${_formatearFecha(_fechaInicio!)} a ${_formatearFecha(_fechaFin!)}',
-                              style: const TextStyle(
-                                  fontSize: 16, color: Colors.black54),
-                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 16, color: Colors.black54),
                             ),
                           ],
                           const SizedBox(height: 16),
-                          ...transaccionesFiltradas.map(_buildItem).toList(),
+                          ...transaccionesFiltradas.map((trans) => _buildItem(trans)).toList(),
                         ],
                       ),
                     ),
@@ -199,13 +229,17 @@ class _transactionsState extends State<transactions> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 12, height: 12, color: color),
+        Container(
+          width: 12,
+          height: 12,
+          color: color,
+        ),
         const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
@@ -236,21 +270,19 @@ class _transactionsState extends State<transactions> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Text(
-                  titulo.toUpperCase(),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Text(
+                titulo.toUpperCase(),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Row(
                 children: [
                   Text(
                     '${tipo ? '+' : '-'}\$${monto.toStringAsFixed(2)}',
                     style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold,
-                        color: tipo ? Colors.green : Colors.red),
-                    overflow: TextOverflow.ellipsis,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: tipo ? Colors.green : Colors.red,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Icon(
@@ -277,51 +309,128 @@ class _transactionsState extends State<transactions> {
   }
 
   String _nombreMes(int m) {
-    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-    return meses[m-1];
+    const meses = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    return meses[m - 1];
   }
 
   Widget _buildGraficoPie() {
-    final filtradas = _graficoActual == 'Gastos'
-        ? _transacciones.where((t) => t['tipo'] == false).toList()
-        : _graficoActual == 'Entradas'
-            ? _transacciones.where((t) => t['tipo'] == true).toList()
-            : _transacciones;
-    final categorias = <String, double>{};
+    List<Map<String, dynamic>> filtradas;
+
+    if (_graficoActual == 'Gastos') {
+      filtradas = _transacciones.where((t) => t['tipo'] == false).toList();
+    } else if (_graficoActual == 'Entradas') {
+      filtradas = _transacciones.where((t) => t['tipo'] == true).toList();
+    } else {
+      filtradas = _transacciones;
+    }
+
+    Map<String, double> categorias = {};
     for (var trans in filtradas) {
       final categoria = trans['categoria'] ?? 'Otros';
       final monto = (trans['monto'] as num).toDouble();
       categorias[categoria] = (categorias[categoria] ?? 0) + monto;
     }
+
     final colores = [
-      Color(0xFFFFA07A), Color(0xFFFFD700), Color(0xFFFFB347),
-      Color(0xFFF0E68C), Color(0xFFFF7F50), Color(0xFFFF6347),
-      Colors.teal, Colors.purple, Colors.blueGrey
+      Color(0xFFFFA07A),
+      Color(0xFFFFD700),
+      Color(0xFFFFB347),
+      Color(0xFFF0E68C),
+      Color(0xFFFF7F50),
+      Color(0xFFFF6347),
+      Colors.teal,
+      Colors.purple,
+      Colors.blueGrey,
     ];
+
+    double total = categorias.values.fold(0, (a, b) => a + b);
     int index = 0;
     _categoriasGraficadas.clear();
-    return PieChart(
-      PieChartData(
-        sectionsSpace: 2,
-        centerSpaceRadius: 70,
-        startDegreeOffset: 180,
-        sections: categorias.entries.map((e) {
-          final color = colores[index % colores.length]; _categoriasGraficadas[e.key] = color; index++;
-          return PieChartSectionData(value: e.value, color: color, showTitle: false, radius: 50);
-        }).toList(),
-      ),
+
+    final entries = categorias.entries.toList();
+
+    final sections = entries.map((e) {
+      final color = colores[index % colores.length];
+      _categoriasGraficadas[e.key] = color;
+      final touched = _indiceTocado == index;
+      final radius = touched ? 60.0 : 50.0;
+      index++;
+      return PieChartSectionData(
+        value: e.value,
+        color: color,
+        radius: radius,
+        title: '',
+      );
+    }).toList();
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        PieChart(
+          PieChartData(
+            sections: sections,
+            sectionsSpace: 2,
+            centerSpaceRadius: 70,
+            startDegreeOffset: 180,
+            pieTouchData: PieTouchData(
+              touchCallback: (event, response) {
+                if (event is FlTapUpEvent) {
+                  final index = response?.touchedSection?.touchedSectionIndex ?? -1;
+                  setState(() {
+                    if (index < 0 || index >= entries.length) {
+                      _indiceTocado = null;
+                    } else {
+                      _indiceTocado = index;
+                    }
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+        if (_indiceTocado != null && _indiceTocado! >= 0 && _indiceTocado! < entries.length)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                entries[_indiceTocado!].key,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '\$${entries[_indiceTocado!].value.toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${(entries[_indiceTocado!].value / total * 100).toStringAsFixed(1)}%',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
+          ),
+      ],
     );
   }
+
 
   Future<void> _seleccionarRangoFecha(BuildContext context) async {
     final rango = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: _fechaInicio != null && _fechaFin != null ? DateTimeRange(start: _fechaInicio!, end: _fechaFin!) : null,
+      initialDateRange: _fechaInicio != null && _fechaFin != null
+          ? DateTimeRange(start: _fechaInicio!, end: _fechaFin!)
+          : null,
     );
+
     if (rango != null) {
-      setState(() { _fechaInicio = rango.start; _fechaFin = rango.end; });
+      setState(() {
+        _fechaInicio = rango.start;
+        _fechaFin = rango.end;
+      });
     }
   }
 }

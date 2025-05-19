@@ -16,7 +16,7 @@ class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    dashboard(),           // Home
+    Dashboard(),           // Home
     budget(),              // Estadísticas
     HistoryScreen(),       // Historial
     GoalsScreen(),         // Dinero

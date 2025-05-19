@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/main_navigator.dart';
 import 'package:flutter/gestures.dart';
 import 'register_screen.dart';
@@ -15,39 +14,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  Future<void> _login() async {
+  void _login() async {
     try {
-      // Inicia sesión con Firebase Auth
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-
-      User? user = userCredential.user;
-      if (user != null) {
-        // Referencia a la colección 'presupuestos'
-        final presupuestosRef = FirebaseFirestore.instance.collection('presupuestos');
-
-        // Consultar si ya existe un documento para este usuario con nombre 'Efectivo'
-        final querySnap = await presupuestosRef
-            .where('usuarioId', isEqualTo: user.uid)
-            .where('nombre', isEqualTo: 'Efectivo')
-            .limit(1)
-            .get();
-
-        // Si no existe, crear el registro inicial
-        if (querySnap.docs.isEmpty) {
-          await presupuestosRef.add({
-            'usuarioId': user.uid,
-            'montoActual': 0,
-            'montoFijado': 0,
-            'nombre': 'Efectivo',
-          });
-        }
-      }
-
-      // Navegar a la pantalla principal
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => MainNavigation()),
