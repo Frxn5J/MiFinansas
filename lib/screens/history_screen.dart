@@ -1,80 +1,297 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navbar.dart';
-import '../widgets//add_button.dart';
+import '../widgets/add_button.dart';
 
-class HistoryScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> items = [
-    {"icon": Icons.home, "label": "Vivienda", "amount": -3000},
-    {"icon": Icons.logout, "label": "Salidas", "amount": -600},
-    {"icon": Icons.videogame_asset, "label": "Entretenimiento", "amount": -200},
-    {"icon": Icons.work, "label": "Quincena", "amount": 5000},
-    {"icon": Icons.directions_bus, "label": "Transporte", "amount": -100},
-    {"icon": Icons.fastfood, "label": "Comida", "amount": -500},
-    {"icon": Icons.loop, "label": "Suscripciones", "amount": -69},
-  ];
+class HistoryScreen extends StatefulWidget {
+  @override
+  _HistoryScreenState createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  String? _uid;
+  String? _selectedCategory;
+  DateTimeRange? _selectedDateRange;
+  RangeValues? _amountRange;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = _auth.currentUser;
+    if (user != null) {
+      _uid = user.uid;
+    }
+  }
+
+  /// Builds Firestore query with optional filters
+  Query _buildQuery() {
+    Query q = _firestore
+        .collection('transacciones')
+        .where('usuarioId', isEqualTo: _uid);
+
+    if (_selectedCategory != null && _selectedCategory!.isNotEmpty) {
+      q = q.where('categoria', isEqualTo: _selectedCategory);
+    }
+    if (_selectedDateRange != null) {
+      q = q
+          .where('fecha',
+              isGreaterThanOrEqualTo:
+                  Timestamp.fromDate(_selectedDateRange!.start))
+          .where('fecha',
+              isLessThanOrEqualTo:
+                  Timestamp.fromDate(_selectedDateRange!.end));
+    }
+    if (_amountRange != null) {
+      q = q
+          .where('monto', isGreaterThanOrEqualTo: _amountRange!.start)
+          .where('monto', isLessThanOrEqualTo: _amountRange!.end);
+    }
+    return q;
+  }
+
+  /// Groups a list of docs by 'categoria' and sums 'monto'
+  Map<String, double> _groupByCategory(List<QueryDocumentSnapshot> docs) {
+    final Map<String, double> data = {};
+    for (var doc in docs) {
+      final cat = doc['categoria'] as String;
+      final amt = (doc['monto'] as num).toDouble();
+      data[cat] = (data[cat] ?? 0) + amt;
+    }
+    return data;
+  }
+
+  /// UI to pick filters
+  Widget _buildFilters() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          _buildFilterButton(
+            icon: Icons.local_offer,
+            label: 'Categoría',
+            onPressed: _pickCategory,
+          ),
+          _buildFilterButton(
+            icon: Icons.calendar_today,
+            label: 'Fecha',
+            onPressed: _pickDateRange,
+          ),
+          _buildFilterButton(
+            icon: Icons.attach_money,
+            label: 'Monto',
+            onPressed: _pickAmountRange,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey[200],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: Colors.black),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickCategory() async {
+    final categories = ['Vivienda', 'Comida', 'Transporte', 'Entretenimiento'];
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (_) => SimpleDialog(
+        title: const Text(
+          'Selecciona categoría',
+          style: TextStyle(color: Colors.black),
+        ),
+        children: categories
+            .map((c) => SimpleDialogOption(
+                  child: Text(
+                    c,
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                  onPressed: () => Navigator.pop(context, c),
+                ))
+            .toList(),
+      ),
+    );
+    if (selected != null) {
+      setState(() => _selectedCategory = selected);
+    }
+  }
+
+  Future<void> _pickDateRange() async {
+    final now = DateTime.now();
+    final result = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 1),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Colors.orange,
+            onPrimary: Colors.white,
+            onSurface: Colors.black,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (result != null) {
+      setState(() => _selectedDateRange = result);
+    }
+  }
+
+  Future<void> _pickAmountRange() async {
+    final initial = _amountRange ?? const RangeValues(0, 10000);
+    RangeValues tempRange = initial;
+    final result = await showDialog<RangeValues>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text(
+          'Rango de monto',
+          style: TextStyle(color: Colors.black),
+        ),
+        content: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RangeSlider(
+                min: 0,
+                max: 10000,
+                divisions: 100,
+                labels: RangeLabels(
+                  tempRange.start.toStringAsFixed(0),
+                  tempRange.end.toStringAsFixed(0),
+                ),
+                values: tempRange,
+                onChanged: (r) => setState(() => tempRange = r),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.black)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, tempRange),
+            child: const Text('OK', style: TextStyle(color: Colors.black)),
+          ),
+        ],
+      ),
+    );
+    if (result != null) setState(() => _amountRange = result);
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_uid == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       floatingActionButton: RegistroFAB(),
       body: Column(
         children: [
-          Container(
-            height: 1,
-            color: Colors.grey.shade300,
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                FilterButton(icon: Icons.local_offer, label: 'Categoría'),
-                FilterButton(icon: Icons.calendar_today, label: 'Fecha'),
-                FilterButton(icon: Icons.attach_money, label: 'Monto'),
-              ],
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Hoy",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Divider(height: 1, color: Colors.grey.shade300),
+          _buildFilters(),
+          if (_selectedDateRange != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'De ${_selectedDateRange!.start.toLocal().toShortDateString()} a ${_selectedDateRange!.end.toLocal().toShortDateString()}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
               ),
             ),
-          ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final isIncome = item['amount'] > 0;
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.orange.shade100,
-                      child: Icon(item['icon'], color: Colors.orange),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _buildQuery().snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No hay transacciones',
+                      style: TextStyle(color: Colors.black),
                     ),
-                    title: Text(
-                      item['label'],
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: const Text("10 de Abril"),
-                    trailing: Text(
-                      "${isIncome ? '+' : ''}\$${item['amount'].toStringAsFixed(2)}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isIncome ? Colors.green : Colors.red[800],
+                  );
+                }
+                final grouped = _groupByCategory(snapshot.data!.docs);
+                return ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  children: grouped.entries.map((e) {
+                    final isIncome = e.value > 0;
+                    return Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.orange.shade100,
+                          child: const Icon(Icons.category, color: Colors.orange),
+                        ),
+                        title: Text(
+                          e.key,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${e.value.toStringAsFixed(2)} registros',
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
+                        trailing: Text(
+                          '${isIncome ? '+' : ''} \$${e.value.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isIncome
+                                ? Colors.green.shade700
+                                : Colors.red.shade800,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  }).toList(),
                 );
               },
             ),
@@ -85,31 +302,8 @@ class HistoryScreen extends StatelessWidget {
   }
 }
 
-class FilterButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const FilterButton({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.grey[200],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: Colors.black),
-            const SizedBox(width: 6),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          ],
-        ),
-      ),
-    );
+extension DateHelpers on DateTime {
+  String toShortDateString() {
+    return "\${this.day}/\${this.month}/\${this.year}";
   }
 }
