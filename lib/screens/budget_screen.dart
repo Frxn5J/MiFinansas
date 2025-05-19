@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/bottom_navbar.dart';
-import '../widgets//add_button.dart';
 
 class budget extends StatefulWidget {
   const budget({super.key});
@@ -10,16 +11,74 @@ class budget extends StatefulWidget {
 }
 
 class _budgetState extends State<budget> {
+  final user = FirebaseAuth.instance.currentUser;
+  final CollectionReference presupuestosRef = FirebaseFirestore.instance.collection('presupuestos');
+
+  Future<void> _showBudgetDialog({DocumentSnapshot? doc}) async {
+    final nombreCtrl = TextEditingController(text: doc?.get('nombre') ?? '');
+    final montoFijadoCtrl = TextEditingController(text: (doc?.get('montoFijado') ?? '').toString());
+
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(doc == null ? 'Nuevo Presupuesto' : 'Editar Presupuesto'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nombreCtrl,
+              decoration: const InputDecoration(labelText: 'Nombre'),
+            ),
+            TextField(
+              controller: montoFijadoCtrl,
+              decoration: const InputDecoration(labelText: 'Monto Fijado'),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final nombre = nombreCtrl.text.trim();
+              final montoFijado = double.tryParse(montoFijadoCtrl.text) ?? 0;
+              if (doc == null) {
+                // Crear
+                await presupuestosRef.add({
+                  'usuarioId': user!.uid,
+                  'nombre': nombre,
+                  'montoFijado': montoFijado,
+                  'montoActual': 0,
+                });
+              } else {
+                // Editar
+                await presupuestosRef.doc(doc.id).update({
+                  'nombre': nombre,
+                  'montoFijado': montoFijado,
+                });
+              }
+              Navigator.pop(context);
+            },
+            child: Text(doc == null ? 'Crear' : 'Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: RegistroFAB(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showBudgetDialog(),
+        child: const Icon(Icons.add),
+      ),
       body: Column(
         children: [
-          Container(
-            height: 1,
-            color: Colors.grey.shade300,
-          ),
+          Container(height: 1, color: Colors.grey.shade300),
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(16),
@@ -37,7 +96,7 @@ class _budgetState extends State<budget> {
               ),
               child: Column(
                 children: [
-                  // Header with title and add button
+                  // Header
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
@@ -45,10 +104,7 @@ class _budgetState extends State<budget> {
                       children: [
                         const Text(
                           'PRESUPUESTOS MENSUALES',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                         Container(
                           decoration: BoxDecoration(
@@ -65,34 +121,52 @@ class _budgetState extends State<budget> {
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.add),
-                            onPressed: () {
-                              // Add budget category logic
-                            },
+                            onPressed: () => _showBudgetDialog(),
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  // Budget categories
-                  _buildBudgetItem('RENTAS', 6400.00, 0),
-                  const Divider(height: 1),
-                  _buildBudgetItem('SALIDAS', 1400.00, 200),
-                  const Divider(height: 1),
-                  _buildBudgetItem('CHETOS', 800.00, 300),
+                  // Lista dinámica de presupuestos
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: presupuestosRef
+                          .where('usuarioId', isEqualTo: user!.uid)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        final docs = snapshot.data!.docs;
+                        if (docs.isEmpty) {
+                          return const Center(child: Text('No hay presupuestos'));
+                        }
+                        return ListView.separated(
+                          itemCount: docs.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final doc = docs[index];
+                            final data = doc.data() as Map<String, dynamic>;
+                            final nombre = data['nombre'] ?? '';
+                            final montoFijado = data['montoFijado']?.toDouble() ?? 0;
+                            final montoActual = data['montoActual']?.toDouble() ?? 0;
+                            return InkWell(
+                              onTap: () => _showBudgetDialog(doc: doc),
+                              child: _buildBudgetItem(nombre, montoFijado, montoActual),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
 
-                  // Spacer
-                  const Spacer(),
-
-                  // Bottom text
+                  // Pie de página
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24.0),
                     child: Text(
                       'ES TODO PARA MOSTRAR',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                   ),
                 ],
@@ -100,7 +174,7 @@ class _budgetState extends State<budget> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -114,10 +188,7 @@ class _budgetState extends State<budget> {
             flex: 2,
             child: Text(
               category,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
@@ -125,20 +196,8 @@ class _budgetState extends State<budget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'FIJADO',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-                Text(
-                  '\$${fixed.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const Text('FIJADO', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                Text('\$${fixed.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -147,20 +206,8 @@ class _budgetState extends State<budget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'DISPONIBLE',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-                Text(
-                  '\$${available.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const Text('DISPONIBLE', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                Text('\$${available.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
