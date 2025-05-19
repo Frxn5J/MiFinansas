@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/pie_chart_widget.dart';
-import '../widgets//add_button.dart';
-import '../services/firestore_service.dart'
-;
+import '../widgets/add_button.dart';
+import '../services/firestore_service.dart';
 
 class transactions extends StatefulWidget {
   const transactions({super.key});
@@ -40,21 +39,14 @@ class _transactionsState extends State<transactions> {
 
   @override
   Widget build(BuildContext context) {
-    List<Map<String, dynamic>> transaccionesFiltradas = _transacciones.where((trans) {
+    final transaccionesFiltradas = _transacciones.where((trans) {
       final fecha = (trans['fecha'] as Timestamp).toDate();
-
       if (_fechaInicio == null) return true;
-
-      if (_fechaInicio != null && _fechaFin == null) {
+      if (_fechaFin == null) {
         return _esMismaFecha(fecha, _fechaInicio!);
       }
-
-      if (_fechaInicio != null && _fechaFin != null) {
-        return fecha.isAfter(_fechaInicio!.subtract(const Duration(days: 1))) &&
-            fecha.isBefore(_fechaFin!.add(const Duration(days: 1)));
-      }
-
-      return true;
+      return fecha.isAfter(_fechaInicio!.subtract(const Duration(days: 1))) &&
+          fecha.isBefore(_fechaFin!.add(const Duration(days: 1)));
     }).toList();
 
     return Scaffold(
@@ -62,81 +54,82 @@ class _transactionsState extends State<transactions> {
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              height: 1,
-              color: Colors.grey.shade300,
-            ),
+            Container(height: 1, color: Colors.grey.shade300),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
+                  // Gráfico Pie
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12.0),
-                            child: DropdownButton<String>(
-                              value: _graficoActual,
-                              items: ['Gastos', 'Entradas', 'Ambos']
-                                  .map((opcion) => DropdownMenuItem(
-                                value: opcion,
-                                child: Text(opcion),
-                              ))
-                                  .toList(),
-                              onChanged: (valor) {
-                                if (valor != null) {
-                                  setState(() => _graficoActual = valor);
-                                }
-                              },
-                            ),
+                          DropdownButton<String>(
+                            isExpanded: true,
+                            value: _graficoActual,
+                            items: ['Gastos', 'Entradas', 'Ambos']
+                                .map((opcion) => DropdownMenuItem(
+                                      value: opcion,
+                                      child: Text(
+                                        opcion,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (valor) {
+                              if (valor != null) setState(() => _graficoActual = valor);
+                            },
                           ),
-                          SizedBox(
-                            height: 240,
+                          const SizedBox(height: 12),
+                          AspectRatio(
+                            aspectRatio: 1.2,
                             child: _buildGraficoPie(),
                           ),
                           const SizedBox(height: 16),
-                          Wrap(
-                            spacing: 16,
-                            runSpacing: 8,
-                            children: _categoriasGraficadas.entries.map((e) {
-                              return _buildLegendItem(e.key, e.value);
-                            }).toList(),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Wrap(
+                              spacing: 16,
+                              runSpacing: 8,
+                              children: _categoriasGraficadas.entries
+                                  .map((e) => _buildLegendItem(e.key, e.value))
+                                  .toList(),
+                            ),
                           ),
                           const SizedBox(height: 20),
                           Row(
                             children: [
-                              const Text(
-                                'Gasto del mes:',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                              Flexible(
+                                child: const Text(
+                                  'Gasto del mes:',
+                                  style: TextStyle(
+                                      fontSize: 20, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               const Spacer(),
-                              RichText(
-                                text: const TextSpan(
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
+                              Flexible(
+                                child: RichText(
+                                  overflow: TextOverflow.ellipsis,
+                                  text: const TextSpan(
+                                    style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black),
+                                    children: [
+                                      TextSpan(text: '\$10,354.50'),
+                                      TextSpan(
+                                          text: ' MXN',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.normal)),
+                                    ],
                                   ),
-                                  children: [
-                                    TextSpan(text: '\$10,354.50'),
-                                    TextSpan(
-                                      text: 'MXN',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ),
                             ],
@@ -146,24 +139,28 @@ class _transactionsState extends State<transactions> {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  // Lista Movimientos
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'MOVIMIENTOS POR MES',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: const Text(
+                                    'MOVIMIENTOS POR MES',
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ),
                               IconButton(
@@ -178,11 +175,13 @@ class _transactionsState extends State<transactions> {
                               _fechaFin == null
                                   ? 'Fecha: ${_formatearFecha(_fechaInicio!)}'
                                   : 'De ${_formatearFecha(_fechaInicio!)} a ${_formatearFecha(_fechaFin!)}',
-                              style: const TextStyle(fontSize: 16, color: Colors.black54),
+                              style: const TextStyle(
+                                  fontSize: 16, color: Colors.black54),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                           const SizedBox(height: 16),
-                          ...transaccionesFiltradas.map((trans) => _buildItem(trans)).toList(),
+                          ...transaccionesFiltradas.map(_buildItem).toList(),
                         ],
                       ),
                     ),
@@ -200,17 +199,13 @@ class _transactionsState extends State<transactions> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 12,
-          height: 12,
-          color: color,
-        ),
+        Container(width: 12, height: 12, color: color),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
+        Flexible(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -241,19 +236,21 @@ class _transactionsState extends State<transactions> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                titulo.toUpperCase(),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Flexible(
+                child: Text(
+                  titulo.toUpperCase(),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               Row(
                 children: [
                   Text(
                     '${tipo ? '+' : '-'}\$${monto.toStringAsFixed(2)}',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: tipo ? Colors.green : Colors.red,
-                    ),
+                        fontSize: 18, fontWeight: FontWeight.bold,
+                        color: tipo ? Colors.green : Colors.red),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(width: 8),
                   Icon(
@@ -280,61 +277,37 @@ class _transactionsState extends State<transactions> {
   }
 
   String _nombreMes(int m) {
-    const meses = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-    ];
-    return meses[m - 1];
+    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    return meses[m-1];
   }
 
   Widget _buildGraficoPie() {
-    List<Map<String, dynamic>> filtradas;
-
-    if (_graficoActual == 'Gastos') {
-      filtradas = _transacciones.where((t) => t['tipo'] == false).toList();
-    } else if (_graficoActual == 'Entradas') {
-      filtradas = _transacciones.where((t) => t['tipo'] == true).toList();
-    } else {
-      filtradas = _transacciones;
-    }
-
-    Map<String, double> categorias = {};
+    final filtradas = _graficoActual == 'Gastos'
+        ? _transacciones.where((t) => t['tipo'] == false).toList()
+        : _graficoActual == 'Entradas'
+            ? _transacciones.where((t) => t['tipo'] == true).toList()
+            : _transacciones;
+    final categorias = <String, double>{};
     for (var trans in filtradas) {
       final categoria = trans['categoria'] ?? 'Otros';
       final monto = (trans['monto'] as num).toDouble();
       categorias[categoria] = (categorias[categoria] ?? 0) + monto;
     }
-
     final colores = [
-      Color(0xFFFFA07A),
-      Color(0xFFFFD700),
-      Color(0xFFFFB347),
-      Color(0xFFF0E68C),
-      Color(0xFFFF7F50),
-      Color(0xFFFF6347),
-      Colors.teal,
-      Colors.purple,
-      Colors.blueGrey,
+      Color(0xFFFFA07A), Color(0xFFFFD700), Color(0xFFFFB347),
+      Color(0xFFF0E68C), Color(0xFFFF7F50), Color(0xFFFF6347),
+      Colors.teal, Colors.purple, Colors.blueGrey
     ];
-
     int index = 0;
     _categoriasGraficadas.clear();
-
     return PieChart(
       PieChartData(
         sectionsSpace: 2,
         centerSpaceRadius: 70,
         startDegreeOffset: 180,
         sections: categorias.entries.map((e) {
-          final color = colores[index % colores.length];
-          _categoriasGraficadas[e.key] = color;
-          index++;
-          return PieChartSectionData(
-            value: e.value,
-            color: color,
-            showTitle: false,
-            radius: 50,
-          );
+          final color = colores[index % colores.length]; _categoriasGraficadas[e.key] = color; index++;
+          return PieChartSectionData(value: e.value, color: color, showTitle: false, radius: 50);
         }).toList(),
       ),
     );
@@ -345,16 +318,10 @@ class _transactionsState extends State<transactions> {
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: _fechaInicio != null && _fechaFin != null
-          ? DateTimeRange(start: _fechaInicio!, end: _fechaFin!)
-          : null,
+      initialDateRange: _fechaInicio != null && _fechaFin != null ? DateTimeRange(start: _fechaInicio!, end: _fechaFin!) : null,
     );
-
     if (rango != null) {
-      setState(() {
-        _fechaInicio = rango.start;
-        _fechaFin = rango.end;
-      });
+      setState(() { _fechaInicio = rango.start; _fechaFin = rango.end; });
     }
   }
 }
