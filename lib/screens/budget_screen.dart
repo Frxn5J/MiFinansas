@@ -46,7 +46,6 @@ class _budgetState extends State<budget> {
               final nombre = nombreCtrl.text.trim();
               final montoFijado = double.tryParse(montoFijadoCtrl.text) ?? 0;
               if (doc == null) {
-                // Crear
                 await presupuestosRef.add({
                   'usuarioId': user!.uid,
                   'nombre': nombre,
@@ -54,7 +53,6 @@ class _budgetState extends State<budget> {
                   'montoActual': 0,
                 });
               } else {
-                // Editar
                 await presupuestosRef.doc(doc.id).update({
                   'nombre': nombre,
                   'montoFijado': montoFijado,
@@ -67,6 +65,40 @@ class _budgetState extends State<budget> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmReset() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Resetear presupuestos'),
+        content: const Text('¿Seguro que quieres resetear los presupuestos? Se restaurará el disponible al monto fijado.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final batch = FirebaseFirestore.instance.batch();
+    final query = await presupuestosRef.where('usuarioId', isEqualTo: user!.uid).get();
+    for (var doc in query.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final nombre = data['nombre'] as String?;
+      if (nombre != 'Efectivo') {
+        final montoFijado = (data['montoFijado'] as num).toDouble();
+        batch.update(presupuestosRef.doc(doc.id), {'montoActual': montoFijado});
+      }
+    }
+    await batch.commit();
   }
 
   @override
@@ -120,8 +152,9 @@ class _budgetState extends State<budget> {
                             ],
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.add),
-                            onPressed: () => _showBudgetDialog(),
+                            icon: const Icon(Icons.refresh),
+                            tooltip: 'Resetear presupuestos',
+                            onPressed: _confirmReset,
                           ),
                         ),
                       ],
@@ -131,9 +164,7 @@ class _budgetState extends State<budget> {
                   // Lista dinámica de presupuestos
                   Expanded(
                     child: StreamBuilder<QuerySnapshot>(
-                      stream: presupuestosRef
-                          .where('usuarioId', isEqualTo: user!.uid)
-                          .snapshots(),
+                      stream: presupuestosRef.where('usuarioId', isEqualTo: user!.uid).snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
