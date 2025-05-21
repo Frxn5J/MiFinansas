@@ -5,7 +5,10 @@ import 'package:fl_chart/fl_chart.dart';
 import '../widgets/add_button.dart';
 import '../widgets/fab_expandible.dart';
 import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
+import 'package:marquee/marquee.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -215,12 +218,56 @@ class _DashboardState extends State<Dashboard> {
         borderRadius: BorderRadius.circular(5),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(titulo, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          // TÍTULO CON DETECCIÓN DE OVERFLOW
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final textPainter = TextPainter(
+                  text: TextSpan(
+                    text: titulo,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  maxLines: 1,
+                  textDirection: ui.TextDirection.ltr,
+                )..layout(maxWidth: constraints.maxWidth);
+
+                final isOverflowing = textPainter.didExceedMaxLines;
+
+                if (isOverflowing) {
+                  return SizedBox(
+                    height: 24,
+                    child: Marquee(
+                      text: titulo,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      scrollAxis: Axis.horizontal,
+                      blankSpace: 20.0,
+                      velocity: 30.0,
+                      pauseAfterRound: const Duration(seconds: 1),
+                      startPadding: 10.0,
+                      accelerationDuration: const Duration(seconds: 1),
+                      accelerationCurve: Curves.linear,
+                      decelerationDuration: const Duration(milliseconds: 500),
+                      decelerationCurve: Curves.easeOut,
+                    ),
+                  );
+                } else {
+                  return Text(
+                    titulo,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  );
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          // MONTO + ICONO
           Row(
             children: [
-              Text(monto, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+              Text(
+                monto,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+              ),
               const SizedBox(width: 5),
               Icon(icono, color: color, size: 24),
             ],

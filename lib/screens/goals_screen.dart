@@ -90,6 +90,7 @@ class GoalsScreen extends StatelessWidget {
                               ),
                             if (completada) const SizedBox(height: 12),
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 CircleAvatar(
                                   backgroundColor: color.withOpacity(0.2),
@@ -97,15 +98,14 @@ class GoalsScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Text(
-                                    nombre,
-                                    style: const TextStyle(fontFamily: 'TiltNeon', fontSize: 18),
-                                  ),
-                                ),
-                                Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
+                                      Text(
+                                        nombre,
+                                        style: const TextStyle(fontFamily: 'TiltNeon', fontSize: 18),
+                                      ),
+                                      const SizedBox(height: 8),
                                       LinearProgressIndicator(
                                         value: (data['acumulado'] ?? 0) / (monto == 0 ? 1 : monto),
                                         backgroundColor: Colors.grey[300],
@@ -115,13 +115,13 @@ class GoalsScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
                                         children: [
-                                          Text(
-                                            "\$${(data['acumulado'] ?? 0).toStringAsFixed(0)} / \$${monto.toStringAsFixed(0)}",
-                                            style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                          Expanded(
+                                            child: Text(
+                                              "\$${(data['acumulado'] ?? 0).toStringAsFixed(0)} / \$${monto.toStringAsFixed(0)}",
+                                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                            ),
                                           ),
-                                          const SizedBox(width: 6),
                                           Text(
                                             "${(((data['acumulado'] ?? 0) / (monto == 0 ? 1 : monto)) * 100).toStringAsFixed(0)}%",
                                             style: TextStyle(
@@ -131,11 +131,11 @@ class GoalsScreen extends StatelessWidget {
                                             ),
                                           ),
                                         ],
-                                      )
+                                      ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 8),
                                 Text(
                                   "\$${monto.toStringAsFixed(2)}",
                                   style: const TextStyle(fontWeight: FontWeight.bold),

@@ -4,8 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/fab_expandible.dart';
 import '../widgets/pie_chart_widget.dart';
-import '../widgets//add_button.dart';
-import '../services/firestore_service.dart';
 
 class transactions extends StatefulWidget {
   const transactions({super.key});
@@ -69,151 +67,201 @@ class _transactionsState extends State<transactions> {
       final fecha = (trans['fecha'] as Timestamp).toDate();
 
       if (_fechaInicio == null) return true;
-
       if (_fechaInicio != null && _fechaFin == null) {
         return _esMismaFecha(fecha, _fechaInicio!);
       }
-
       if (_fechaInicio != null && _fechaFin != null) {
         return fecha.isAfter(_fechaInicio!.subtract(const Duration(days: 1))) &&
             fecha.isBefore(_fechaFin!.add(const Duration(days: 1)));
       }
-
       return true;
     }).toList();
 
     return Scaffold(
+      backgroundColor: Colors.white,
       floatingActionButton: FABExpandible(),
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              height: 1,
-              color: Colors.grey.shade300,
-            ),
+            Container(height: 1, color: Colors.grey.shade300),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12.0),
-                            child: DropdownButton<String>(
-                              value: _graficoActual,
-                              items: ['Gastos', 'Entradas', 'Ambos']
-                                  .map((opcion) => DropdownMenuItem(
-                                value: opcion,
-                                child: Text(opcion),
-                              ))
-                                  .toList(),
-                              onChanged: (valor) {
-                                if (valor != null) {
-                                  setState(() => _graficoActual = valor);
-                                }
-                              },
-                            ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6.0, bottom: 12.0),
+                          child: DropdownButton<String>(
+                            value: _graficoActual,
+                            items: ['Gastos', 'Entradas', 'Ambos']
+                                .map((opcion) => DropdownMenuItem(
+                              value: opcion,
+                              child: Text(opcion),
+                            ))
+                                .toList(),
+                            onChanged: (valor) {
+                              if (valor != null) {
+                                setState(() => _graficoActual = valor);
+                              }
+                            },
                           ),
-                          SizedBox(
-                            height: 240,
-                            child: _buildGraficoPie(),
-                          ),
-                          const SizedBox(height: 16),
-                          Wrap(
+                        ),
+                        SizedBox(height: 240, child: _buildGraficoPie(transaccionesFiltradas)),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: Wrap(
                             spacing: 16,
                             runSpacing: 8,
+                            alignment: WrapAlignment.center,
                             children: _categoriasGraficadas.entries.map((e) {
-                              return _buildLegendItem(e.key, e.value);
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(width: 12, height: 12, color: e.value),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    e.key,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              );
                             }).toList(),
                           ),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              const Text(
-                                'Balance del mes:',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: RichText(
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  text: TextSpan(
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                    children: [
-                                      TextSpan(text: '\$${_calcularBalanceMensual().toStringAsFixed(2)}'),
-                                      const TextSpan(
-                                        text: ' MXN',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.normal,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Balance del mes:',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '\$${_calcularBalanceMensual().toStringAsFixed(2)} MXN',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
                           ),
-                        ],
-                      ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'MOVIMIENTOS POR MES',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.calendar_month, size: 28),
-                                onPressed: () => _seleccionarRangoFecha(context),
-                              ),
-                            ],
-                          ),
-                          if (_fechaInicio != null) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              _fechaFin == null
-                                  ? 'Fecha: ${_formatearFecha(_fechaInicio!)}'
-                                  : 'De ${_formatearFecha(_fechaInicio!)} a ${_formatearFecha(_fechaFin!)}',
-                              style: const TextStyle(fontSize: 16, color: Colors.black54),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'MOVIMIENTOS POR MES',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.calendar_month, size: 28),
+                              onPressed: () => _seleccionarRangoFecha(context),
                             ),
                           ],
-                          const SizedBox(height: 16),
-                          ...transaccionesFiltradas.map((trans) => _buildItem(trans)).toList(),
+                        ),
+                        if (_fechaInicio != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            _fechaFin == null
+                                ? 'Fecha: ${_formatearFecha(_fechaInicio!)}'
+                                : 'De ${_formatearFecha(_fechaInicio!)} a ${_formatearFecha(_fechaFin!)}',
+                            style: const TextStyle(fontSize: 16, color: Colors.black54),
+                          ),
                         ],
-                      ),
+                        const SizedBox(height: 16),
+                        ...transaccionesFiltradas.map((trans) {
+                          final tipo = trans['tipo'] as bool;
+                          final titulo = trans['titulo'] ?? '';
+                          final monto = trans['monto'] ?? 0;
+                          final fecha = (trans['fecha'] as Timestamp).toDate();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _formatearFecha(fecha),
+                                style: const TextStyle(fontSize: 16, color: Colors.black54),
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        titulo,
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '${tipo ? '+' : '-'}\$${monto.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: tipo ? Colors.green : Colors.red,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Icon(
+                                          tipo ? Icons.arrow_upward : Icons.arrow_downward,
+                                          color: tipo ? Colors.green : Colors.red,
+                                          size: 24,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+                          );
+                        }).toList(),
+                      ],
                     ),
                   ),
                 ],
@@ -225,110 +273,27 @@ class _transactionsState extends State<transactions> {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          color: color,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildItem(Map<String, dynamic> trans) {
-    final tipo = trans['tipo'] as bool;
-    final titulo = trans['titulo'] ?? '';
-    final monto = trans['monto'] ?? 0;
-    final fecha = (trans['fecha'] as Timestamp).toDate();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          _formatearFecha(fecha),
-          style: const TextStyle(fontSize: 16, color: Colors.black54),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.all(12),
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                titulo.toUpperCase(),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Row(
-                children: [
-                  Text(
-                    '${tipo ? '+' : '-'}\$${monto.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: tipo ? Colors.green : Colors.red,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    tipo ? Icons.arrow_upward : Icons.arrow_downward,
-                    color: tipo ? Colors.green.shade400 : Colors.red.shade400,
-                    size: 24,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   String _formatearFecha(DateTime fecha) {
-    return '${_nombreDia(fecha.weekday)} ${fecha.day} de ${_nombreMes(fecha.month)} ${fecha.year}';
-  }
-
-  String _nombreDia(int d) {
     const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    return dias[d - 1];
-  }
-
-  String _nombreMes(int m) {
     const meses = [
       'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
     ];
-    return meses[m - 1];
+    return '${dias[fecha.weekday - 1]} ${fecha.day} de ${meses[fecha.month - 1]} ${fecha.year}';
   }
 
-  Widget _buildGraficoPie() {
-    List<Map<String, dynamic>> filtradas;
-
+  Widget _buildGraficoPie(List<Map<String, dynamic>> filtradas) {
+    List<Map<String, dynamic>> datosGraficar;
     if (_graficoActual == 'Gastos') {
-      filtradas = _transacciones.where((t) => t['tipo'] == false).toList();
+      datosGraficar = filtradas.where((t) => t['tipo'] == false).toList();
     } else if (_graficoActual == 'Entradas') {
-      filtradas = _transacciones.where((t) => t['tipo'] == true).toList();
+      datosGraficar = filtradas.where((t) => t['tipo'] == true).toList();
     } else {
-      filtradas = _transacciones;
+      datosGraficar = filtradas;
     }
 
     Map<String, double> categorias = {};
-    for (var trans in filtradas) {
+    for (var trans in datosGraficar) {
       final categoria = trans['categoria'] ?? 'Otros';
       final monto = (trans['monto'] as num).toDouble();
       categorias[categoria] = (categorias[categoria] ?? 0) + monto;
@@ -380,11 +345,7 @@ class _transactionsState extends State<transactions> {
                 if (event is FlTapUpEvent) {
                   final index = response?.touchedSection?.touchedSectionIndex ?? -1;
                   setState(() {
-                    if (index < 0 || index >= entries.length) {
-                      _indiceTocado = null;
-                    } else {
-                      _indiceTocado = index;
-                    }
+                    _indiceTocado = (index >= 0 && index < entries.length) ? index : null;
                   });
                 }
               },
@@ -414,7 +375,6 @@ class _transactionsState extends State<transactions> {
       ],
     );
   }
-
 
   Future<void> _seleccionarRangoFecha(BuildContext context) async {
     final rango = await showDateRangePicker(

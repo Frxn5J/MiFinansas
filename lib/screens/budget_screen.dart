@@ -104,6 +104,7 @@ class _budgetState extends State<budget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.white,
         floatingActionButton: const FABExpandible(),
       body: Column(
         children: [

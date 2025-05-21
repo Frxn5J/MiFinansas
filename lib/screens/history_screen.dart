@@ -33,6 +33,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
+  Future<List<String>> _obtenerCategorias() async {
+    final snapshot = await _firestore
+        .collection('transacciones')
+        .where('usuarioId', isEqualTo: _uid)
+        .get();
+
+    final categorias = snapshot.docs
+        .map((doc) => doc['categoria']?.toString() ?? '')
+        .toSet()
+        .toList();
+
+    categorias.removeWhere((cat) => cat.isEmpty);
+    return categorias;
+  }
+
   Widget _buildFilters() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -90,16 +105,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _pickCategory() async {
-    final categories = ['Vivienda', 'Comida', 'Transporte', 'Entretenimiento'];
+    final categories = await _obtenerCategorias();
     final selected = await showDialog<String>(
       context: context,
       builder: (_) => SimpleDialog(
         title: const Text('Selecciona categoría', style: TextStyle(color: Colors.black)),
         children: categories
             .map((c) => SimpleDialogOption(
-                  child: Text(c, style: const TextStyle(color: Colors.black)),
-                  onPressed: () => Navigator.pop(context, c),
-                ))
+          child: Text(c, style: const TextStyle(color: Colors.black)),
+          onPressed: () => Navigator.pop(context, c),
+        ))
             .toList(),
       ),
     );
@@ -140,11 +155,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
               RangeSlider(
                 min: -10000,
                 max: 10000,
-                divisions: 100,
-                labels: RangeLabels(tempRange.start.toStringAsFixed(0), tempRange.end.toStringAsFixed(0)),
+                divisions: 20,
+                labels: RangeLabels(
+                  '\$${tempRange.start.toStringAsFixed(0)}',
+                  '\$${tempRange.end.toStringAsFixed(0)}',
+                ),
                 values: tempRange,
                 onChanged: (r) => setState(() => tempRange = r),
-              ),
+                activeColor: Colors.orange,
+                inactiveColor: Colors.orange.shade100,
+              )
             ],
           ),
         ),
@@ -249,16 +269,55 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   children: grouped.entries.map((e) {
                     final isIncome = e.value > 0;
-                    return Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 12.0),
                       margin: const EdgeInsets.symmetric(vertical: 6),
-                      child: ListTile(
-                        leading: CircleAvatar(backgroundColor: Colors.orange.shade100, child: const Icon(Icons.category, color: Colors.orange)),
-                        title: Text(e.key, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-                        subtitle: Text('${e.value.toStringAsFixed(2)} registros', style: TextStyle(color: Colors.grey.shade700)),
-                        trailing: Text('${isIncome ? '+' : ''} \$${e.value.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.bold, color: isIncome ? Colors.green.shade700 : Colors.red.shade800)),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9F9F9),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.orange.shade100,
+                            child: const Icon(Icons.category, color: Colors.orange),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(e.key, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                const SizedBox(height: 4),
+                                Text('${e.value.toStringAsFixed(2)} registros', style: const TextStyle(color: Colors.black54)),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${isIncome ? '+' : ''}\$${e.value.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: isIncome ? Colors.green : Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     );
+
                   }).toList(),
                 );
               },
