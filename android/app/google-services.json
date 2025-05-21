@@ -12,7 +12,20 @@
           "package_name": "com.alfadevlabs.mifinanzas"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1073126235685-ase3cb00nl340n3ntvc0m8pcjheaef0i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alfadevlabs.mifinanzas",
+            "certificate_hash": "c864ecbb86b4f92d4c36daa5d6dc3077d83731f9"
+          }
+        },
+        {
+          "client_id": "1073126235685-347b1klq8thccsm8qj1c1o4en6s22of3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD2vesUqwROjFAo5wms8OOzhy0afcjw6rY"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1073126235685-347b1klq8thccsm8qj1c1o4en6s22of3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
