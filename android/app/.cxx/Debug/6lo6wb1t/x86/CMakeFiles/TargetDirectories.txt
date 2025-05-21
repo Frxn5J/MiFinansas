@@ -1,0 +1,2 @@
+C:/Users/losac/OneDrive/Archivos 2016/Documentos/Escuela/movil/MiFinansas/android/app/.cxx/Debug/6lo6wb1t/x86/CMakeFiles/edit_cache.dir
+C:/Users/losac/OneDrive/Archivos 2016/Documentos/Escuela/movil/MiFinansas/android/app/.cxx/Debug/6lo6wb1t/x86/CMakeFiles/rebuild_cache.dir

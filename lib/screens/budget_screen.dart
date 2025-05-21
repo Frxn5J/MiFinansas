@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../widgets/bottom_navbar.dart';
+import 'package:mifinanzas/widgets/fab_expandible.dart';
 
 class budget extends StatefulWidget {
   const budget({super.key});
@@ -104,12 +104,7 @@ class _budgetState extends State<budget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF4CAF50),
-        foregroundColor: Colors.white,
-        onPressed: () => _showBudgetDialog(),
-        child: const Icon(Icons.add),
-      ),
+        floatingActionButton: const FABExpandible(),
       body: Column(
         children: [
           Container(height: 1, color: Colors.grey.shade300),

@@ -21,6 +21,25 @@
                     }
                 },
                 {
+                    "source": "C:\\Users\\losac\\OneDrive\\Archivos 2016\\Documentos\\Escuela\\movil\\MiFinansas\\android\\app\\src\\main\\res\\values\\styles.xml",
+                    "from": {
+                        "startLines": "3,14",
+                        "startColumns": "4,4",
+                        "startOffsets": "176,832",
+                        "endLines": "7,16",
+                        "endColumns": "12,12",
+                        "endOffsets": "483,998"
+                    },
+                    "to": {
+                        "startLines": "200,204",
+                        "startColumns": "4,4",
+                        "startOffsets": "12461,12642",
+                        "endLines": "203,206",
+                        "endColumns": "12,12",
+                        "endOffsets": "12637,12806"
+                    }
+                },
+                {
                     "source": "C:\\Users\\losac\\.gradle\\caches\\transforms-3\\6a18b3aec1518ff926153ee0347f7b57\\transformed\\jetified-startup-runtime-1.1.1\\res\\values\\values.xml",
                     "from": {
                         "startLines": "2",
@@ -73,25 +92,6 @@
                         "endLines": "25,55,56,61,62,71,72,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,134,135,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,160,164,165,166,167,168,169,170,199,207,211,212,216,217,230,231,248,258,291,312,354,360",
                         "endColumns": "59,71,87,64,65,68,62,69,67,71,69,60,73,72,60,60,61,63,61,60,67,99,59,65,72,68,56,51,61,71,75,64,58,58,59,59,59,59,59,59,59,59,59,59,58,59,59,59,59,59,59,59,59,59,59,58,59,59,58,58,58,58,58,58,34,34,54,62,54,57,57,60,62,56,50,49,60,56,65,33,34,34,69,66,71,68,68,73,71,87,70,116,12,109,12,128,71,66,24,24,24,24,24,24",
                         "endOffsets": "830,1840,1928,2242,2308,3048,3111,3324,3392,3464,3534,3595,3669,3742,3803,3864,3926,3990,4052,4113,4181,4281,4341,4407,4480,4549,4606,4658,4720,4792,4868,4933,4992,5051,5111,5171,5231,5291,5351,5411,5471,5531,5591,5651,5710,5770,5830,5890,5950,6010,6070,6130,6190,6250,6310,6369,6429,6489,6548,6607,6666,6725,6784,6843,6995,7030,7192,7255,7310,7368,7426,7487,7550,7607,7658,7708,7769,7826,7892,7926,7961,7996,8405,8721,8793,8862,8931,9005,9077,9165,12456,12923,13124,13234,13435,13564,14269,14336,14892,15193,16924,17605,18606,18773"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\losac\\Escritorio\\proyecto\\MiFinansas\\android\\app\\src\\main\\res\\values\\styles.xml",
-                    "from": {
-                        "startLines": "3,14",
-                        "startColumns": "4,4",
-                        "startOffsets": "176,832",
-                        "endLines": "7,16",
-                        "endColumns": "12,12",
-                        "endOffsets": "483,998"
-                    },
-                    "to": {
-                        "startLines": "200,204",
-                        "startColumns": "4,4",
-                        "startOffsets": "12461,12642",
-                        "endLines": "203,206",
-                        "endColumns": "12,12",
-                        "endOffsets": "12637,12806"
                     }
                 },
                 {
@@ -184,23 +184,6 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\losac\\Escritorio\\proyecto\\MiFinansas\\build\\app\\generated\\res\\google-services\\debug\\values\\values.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7",
-                        "startColumns": "4,4,4,4,4,4",
-                        "startOffsets": "55,138,242,352,472,581",
-                        "endColumns": "82,103,109,119,108,77",
-                        "endOffsets": "133,237,347,467,576,654"
-                    },
-                    "to": {
-                        "startLines": "193,194,195,196,197,198",
-                        "startColumns": "4,4,4,4,4,4",
-                        "startOffsets": "11786,11869,11973,12083,12203,12312",
-                        "endColumns": "82,103,109,119,108,77",
-                        "endOffsets": "11864,11968,12078,12198,12307,12385"
-                    }
-                },
-                {
                     "source": "C:\\Users\\losac\\.gradle\\caches\\transforms-3\\e0a1047da92b5909885ef9efc32bbf0a\\transformed\\fragment-1.7.1\\res\\values\\values.xml",
                     "from": {
                         "startLines": "2,3,4,5,10",
@@ -234,6 +217,23 @@
                         "startOffsets": "8001",
                         "endColumns": "42",
                         "endOffsets": "8039"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\losac\\OneDrive\\Archivos 2016\\Documentos\\Escuela\\movil\\MiFinansas\\build\\app\\generated\\res\\google-services\\debug\\values\\values.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "55,138,242,352,472,581",
+                        "endColumns": "82,103,109,119,108,77",
+                        "endOffsets": "133,237,347,467,576,654"
+                    },
+                    "to": {
+                        "startLines": "193,194,195,196,197,198",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "11786,11869,11973,12083,12203,12312",
+                        "endColumns": "82,103,109,119,108,77",
+                        "endOffsets": "11864,11968,12078,12198,12307,12385"
                     }
                 },
                 {
