@@ -58,13 +58,13 @@ class _ModalAjusteMetaState extends State<ModalAjusteMeta> {
         showDialog(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('🎉 ¡Meta completada!'),
+            title: const Text('¡Meta completada!'),
             content: const Text('Felicidades, has alcanzado tu objetivo de ahorro.'),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Cierra el dialogo
-                  Navigator.pop(context); // Cierra el modal
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 child: const Text('Cerrar'),
               )
@@ -72,7 +72,7 @@ class _ModalAjusteMetaState extends State<ModalAjusteMeta> {
           ),
         );
       } else {
-        Navigator.pop(context); // Solo cierra el modal
+        Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/main_navigator.dart';
 import 'package:flutter/gestures.dart';
 import 'register_screen.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_api_availability/google_api_availability.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -14,16 +17,71 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  Future<void> _loginConGoogle() async {
+    try {
+      await GoogleSignIn().signOut();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final user = userCredential.user;
+
+      if (user != null) {
+        final userDoc = FirebaseFirestore.instance.collection('usuarios').doc(user.uid);
+        await userDoc.set({
+          'usuario': user.displayName ?? 'Usuario sin nombre',
+          'correo': user.email,
+        }, SetOptions(merge: true));
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => MainNavigation()),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Google Sign-In error: $e');
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text("Inicio fallido"),
+            content: const Text("El inicio con Google falló. Por favor, intenta nuevamente."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cerrar"),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
   void _login() async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => MainNavigation()),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => MainNavigation()),
+          );
+        }
+      });
     } on FirebaseAuthException catch (e) {
       String mensaje;
       switch (e.code) {
@@ -44,23 +102,27 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _mostrarErrorBonito(String mensaje) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.black,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        content: Text(
-          mensaje,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
-          )
-        ],
-      ),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: Colors.black,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            content: Text(
+              mensaje,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
+              )
+            ],
+          ),
+        );
+      }
+    });
   }
 
   @override
@@ -206,10 +268,13 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               const Text('O inicia sesión con:'),
               const SizedBox(height: 16),
-              CircleAvatar(
-                backgroundColor: Colors.grey.shade100,
-                radius: 28,
-                child: Image.asset('assets/google_logo.png', width: 32, height: 32),
+              GestureDetector(
+                onTap: _loginConGoogle,
+                child: CircleAvatar(
+                  backgroundColor: Colors.grey.shade100,
+                  radius: 28,
+                  child: Image.asset('assets/google_logo.png', width: 32, height: 32),
+                ),
               ),
               const SizedBox(height: 40),
             ],

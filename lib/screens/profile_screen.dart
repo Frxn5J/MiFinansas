@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mifinanzas/screens/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -103,12 +105,104 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _cerrarSesion(BuildContext context) async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => LoginScreen()),
-          (Route<dynamic> route) => false,
+  void _mostrarFormularioPin(BuildContext context) {
+    final pinController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Establecer PIN'),
+          content: TextField(
+            controller: pinController,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'PIN de 4 dígitos',
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancelar")),
+            ElevatedButton(
+              onPressed: () async {
+                final pin = pinController.text.trim();
+                if (pin.length != 4 || int.tryParse(pin) == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Ingresa un PIN válido de 4 dígitos")),
+                  );
+                  return;
+                }
+
+                final user = FirebaseAuth.instance.currentUser!;
+                await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).update({
+                  'pin': pin,
+                });
+
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("PIN guardado exitosamente")),
+                );
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  void _confirmarEliminarPin(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Eliminar PIN"),
+          content: const Text("¿Estás seguro de que deseas eliminar tu PIN?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final user = FirebaseAuth.instance.currentUser!;
+                await FirebaseFirestore.instance
+                    .collection('usuarios')
+                    .doc(user.uid)
+                    .update({'pin': FieldValue.delete()});
+
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("PIN eliminado correctamente")),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text("Eliminar", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _cerrarSesion(BuildContext context) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('pinValidado');
+
+      await FirebaseAuth.instance.signOut();
+      await GoogleSignIn().signOut();
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+            (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al cerrar sesión: ${e.toString()}")),
+      );
+    }
   }
 
   @override
@@ -139,17 +233,24 @@ class ProfileScreen extends StatelessWidget {
           final nombreUsuario = snapshot.data!['nombre'];
           final correoUsuario = snapshot.data!['correo'];
 
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                const SizedBox(height: 20),
                 CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.orange,
                   child: CircleAvatar(
                     radius: 55,
+                    backgroundImage: FirebaseAuth.instance.currentUser?.photoURL != null
+                        ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
+                        : null,
                     backgroundColor: Colors.white,
-                    child: const Icon(Icons.person, size: 60, color: Colors.black),
+                    child: FirebaseAuth.instance.currentUser?.photoURL == null
+                        ? const Icon(Icons.person, size: 60, color: Colors.black)
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -160,7 +261,6 @@ class ProfileScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 20),
-
                 const Text('Moneda', style: TextStyle(color: Colors.grey)),
                 const SizedBox(height: 8),
                 Container(
@@ -184,19 +284,59 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 24),
-                const Text('Cambiar PIN', style: TextStyle(color: Colors.grey)),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: const Icon(Icons.lock, size: 40),
-                ),
+                const SizedBox(height: 24),
+                Builder(
+                  builder: (context) {
+                    return ElevatedButton.icon(
+                      onPressed: () async {
+                        final RenderBox button = context.findRenderObject() as RenderBox;
+                        final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+                        final offset = button.localToGlobal(Offset.zero, ancestor: overlay);
 
+                        final selected = await showMenu<String>(
+                          context: context,
+                          position: RelativeRect.fromLTRB(
+                            offset.dx,
+                            offset.dy + button.size.height + 8,
+                            offset.dx + button.size.width,
+                            offset.dy,
+                          ),
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          items: [
+                            const PopupMenuItem(
+                              value: 'establecer',
+                              child: Text('Establecer o cambiar PIN'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'eliminar',
+                              child: Text('Eliminar PIN'),
+                            ),
+                          ],
+                        );
+
+                        if (selected == 'establecer') {
+                          _mostrarFormularioPin(context);
+                        } else if (selected == 'eliminar') {
+                          _confirmarEliminarPin(context);
+                        }
+                      },
+                      icon: const Icon(Icons.lock),
+                      label: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        child: Text("PIN de seguridad"),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                        foregroundColor: Colors.black,
+                        elevation: 3,
+                        shadowColor: Colors.black45,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 24),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -208,13 +348,7 @@ class ProfileScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
                       onPressed: () => _mostrarFormularioCambiarPassword(context, correoUsuario),
-                      child: const Text(
-                        "Cambiar contraseña",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
+                      child: const Text("Cambiar contraseña", style: TextStyle(color: Colors.white, fontSize: 16)),
                     ),
                     const SizedBox(height: 10),
                     ElevatedButton(
@@ -224,13 +358,7 @@ class ProfileScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       ),
                       onPressed: () => _cerrarSesion(context),
-                      child: const Text(
-                        "Cerrar Sesión",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
+                      child: const Text("Cerrar Sesión", style: TextStyle(color: Colors.white, fontSize: 16)),
                     ),
                   ],
                 )

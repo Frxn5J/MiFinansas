@@ -30,7 +30,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-      // 1️⃣ Crear usuario en Auth
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -38,7 +37,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       final uid = userCredential.user!.uid;
 
-      // 2️⃣ Crear documento en Firestore con saldoInicial = 0.0
       await _firestore
           .collection('usuarios')
           .doc(uid)
@@ -47,10 +45,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'email': email,
         'uid': uid,
         'fechaRegistro': FieldValue.serverTimestamp(),
-        'saldoDisponible': 0.0,         // ← Nuevo campo
+        'saldoDisponible': 0.0,
       });
 
-      // 3️⃣ Volver atrás
       Navigator.pop(context);
     } catch (e) {
       _showError('Error al registrar: $e');

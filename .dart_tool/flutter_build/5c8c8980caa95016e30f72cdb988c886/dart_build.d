@@ -1,0 +1,1 @@
+ C:\\Users\\losac\\OneDrive\\Archivos\ 2016\\Documentos\\Escuela\\movil\\MiFinansas\\.dart_tool\\flutter_build\\5c8c8980caa95016e30f72cdb988c886\\dart_build_result.json: 

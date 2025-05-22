@@ -11,20 +11,53 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      selectedItemColor: Color(0xFFFFA46E),
-      unselectedItemColor: Colors.black,
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-      onTap: onTap,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.access_time), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.attach_money), label: ''),
-        BottomNavigationBarItem(icon: Icon(Icons.copy), label: ''),
-      ],
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          currentIndex: currentIndex,
+          selectedItemColor: const Color(0xFFFFA46E),
+          unselectedItemColor: Colors.black.withOpacity(0.6),
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          onTap: onTap,
+          items: List.generate(5, (index) {
+            final icons = [
+              Icons.home,
+              Icons.bar_chart,
+              Icons.access_time,
+              Icons.attach_money,
+              Icons.copy,
+            ];
+
+            return BottomNavigationBarItem(
+              icon: AnimatedScale(
+                scale: currentIndex == index ? 1.2 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                child: Icon(icons[index]),
+              ),
+              label: '',
+            );
+          }),
+        ),
+      ),
     );
   }
 }

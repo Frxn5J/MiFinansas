@@ -57,7 +57,7 @@ class _MainNavigationState extends State<MainNavigation> {
             fontSize: 32,
             fontWeight: FontWeight.w600,
             color: Colors.black,
-            fontFamily: 'TiltNeon', // si estás usando esa fuente
+            fontFamily: 'TiltNeon',
           ),
         ),
         actions: [

@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/formulario_transaccion.dart';
 import '../screens/formulario_meta.dart';
-import 'add_button.dart';
 
 class FABExpandible extends StatefulWidget {
   const FABExpandible({Key? key}) : super(key: key);
@@ -67,55 +66,75 @@ class _FABExpandibleState extends State<FABExpandible> with SingleTickerProvider
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     const Color verdeFinanzas = Color(0xFF4CAF50);
     const Color grisClaro = Color(0xFFE0E0E0);
+    final isHorizontal = MediaQuery.of(context).orientation == Orientation.landscape;
 
-    return Column(
+    final botones = [
+      _buildBotonSecundario(
+        icono: Icons.account_balance_wallet,
+        colorFondo: grisClaro,
+        colorIcono: Colors.teal,
+        etiqueta: 'Presupuesto',
+        onPressed: () {
+          setState(() => _abierto = false);
+          _abrirFormularioPresupuesto();
+        },
+      ),
+      _buildBotonSecundario(
+        icono: Icons.flag,
+        colorFondo: grisClaro,
+        colorIcono: Colors.blueGrey[700]!,
+        etiqueta: 'Meta',
+        onPressed: () {
+          setState(() => _abierto = false);
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => FormularioMeta(),
+          );
+        },
+      ),
+      _buildBotonSecundario(
+        icono: Icons.swap_horiz,
+        colorFondo: grisClaro,
+        colorIcono: Colors.green.shade800,
+        etiqueta: 'Transacción',
+        onPressed: () {
+          setState(() => _abierto = false);
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => FormularioTransaccion(),
+          );
+        },
+      ),
+    ];
+
+    final espaciado = SizedBox(width: isHorizontal ? 10 : 0, height: isHorizontal ? 0 : 10);
+
+    return isHorizontal
+        ? Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (_abierto) ...[
+          for (var b in botones) ...[b, espaciado],
+        ],
+        FloatingActionButton(
+          onPressed: () => setState(() => _abierto = !_abierto),
+          backgroundColor: verdeFinanzas,
+          child: Icon(_abierto ? Icons.close : Icons.add, color: Colors.white),
+        )
+      ],
+    )
+        : Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (_abierto) ...[
-          _buildBotonSecundario(
-            icono: Icons.account_balance_wallet,
-            colorFondo: grisClaro,
-            colorIcono: Colors.teal,
-            etiqueta: 'Presupuesto',
-            onPressed: () {
-              setState(() => _abierto = false);
-              _abrirFormularioPresupuesto();
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildBotonSecundario(
-            icono: Icons.flag,
-            colorFondo: grisClaro,
-            colorIcono: Colors.blueGrey[700]!,
-            etiqueta: 'Meta',
-            onPressed: () {
-              setState(() => _abierto = false);
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) => FormularioMeta(),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          _buildBotonSecundario(
-            icono: Icons.swap_horiz,
-            colorFondo: grisClaro,
-            colorIcono: Colors.green.shade800,
-            etiqueta: 'Transacción',
-            onPressed: () {
-              setState(() => _abierto = false);
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) => FormularioTransaccion(),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
+          for (var b in botones) ...[b, espaciado],
         ],
         FloatingActionButton(
           onPressed: () => setState(() => _abierto = !_abierto),
