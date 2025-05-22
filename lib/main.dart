@@ -11,7 +11,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await initializeDateFormatting('es_MX', null);
-
   runApp(MyApp());
 }
 
